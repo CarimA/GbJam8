@@ -37,7 +37,7 @@ namespace GBJamGame
             SpriteBatch = new SpriteBatch(GraphicsDevice);
             Input = new Input();
 
-            _scene = new TitleScene(this);
+            _scene = new CreditsScene(this);
         }
 
         public SpriteBatch SpriteBatch { get; }

@@ -31,6 +31,9 @@
     <None Update="assets\art\4.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="assets\credits.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="assets\title.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

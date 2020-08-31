@@ -1,6 +1,18 @@
-GameBoy Crayon Club
+
+
+
+
+
+      CREDITS
+
+      GameBoy
+    Crayon Club
 
   Made for GBJAM8
+
+
+
+
 
 
       ~ ART ~
@@ -27,8 +39,26 @@ GameBoy Crayon Club
     DefleMask
     MilkyTracker
     MonoGame
-    
+   
+  
+  Source code at:
+ https://github.com
+   /CarimA/GbJam8
 
-     THANK  YOU
-        FOR
-      PLAYING!
+
+
+
+
+
+ ##################
+ #   THANK  YOU   #
+ #      FOR       #
+ #    PLAYING!    #
+ ##################
+
+
+
+
+
+
+

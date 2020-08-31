@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using GBJamGame.Enums;
 using GBJamGame.Globals;
 using Microsoft.Xna.Framework;
@@ -20,6 +21,9 @@ namespace GBJamGame.Scenes
         private bool _cursorBlinking;
 
         private float _cursorBlinkTime;
+
+        private int _lastPaintedX;
+        private int _lastPaintedY;
 
         private int _cursorX;
         private int _cursorY;
@@ -49,17 +53,20 @@ namespace GBJamGame.Scenes
 
             SelectedAIndex = Tool.Pencil1px;
             SelectedBIndex = Tool.Undo;
+            _menuIndex = 1;
             _selectedTone = 2;
 
             _ui = Utils.Texture2DFromFile(game.GraphicsDevice, "assets/ui.png");
             _font = Utils.Texture2DFromFile(game.GraphicsDevice, "assets/font.png");
-            var art = Utils.Texture2DFromFile(game.GraphicsDevice, "assets/art/3.png");
+            var art = Utils.Texture2DFromFile(game.GraphicsDevice, "assets/art/5.png");
             _canvas.SetFromTexture(art);
 
             _inMenu = false;
         }
 
         private Input Input => _game.Input;
+
+        private Audio Audio => _game.Audio;
 
         public void Update(GameTime gameTime)
         {
@@ -70,27 +77,24 @@ namespace GBJamGame.Scenes
                 _cursorBlinking = !_cursorBlinking;
             }
 
-            if (Input.Pressed(Actions.Select)) _inMenu = !_inMenu;
+            if (Input.Pressed(Actions.Select))
+            {
+                ToggleMenu();
+            }
 
             if (_inMenu)
             {
                 if (Input.Pressed(Actions.DPadUp))
-                {
-                    _menuIndex--;
-                    if (_menuIndex < 1)
-                        _menuIndex = (int) Tool.FillMode;
-                }
+                    MoveMenu(-1);
 
                 if (Input.Pressed(Actions.DPadDown))
-                {
-                    _menuIndex++;
-                    if (_menuIndex > (int) Tool.FillMode)
-                        _menuIndex = 1;
-                }
+                    MoveMenu(1);
 
-                if (Input.Pressed(Actions.A)) SelectedAIndex = (Tool) _menuIndex;
+                if (Input.Pressed(Actions.A))
+                    ChangeMenu(ref SelectedAIndex);
 
-                if (Input.Pressed(Actions.B)) SelectedBIndex = (Tool) _menuIndex;
+                if (Input.Pressed(Actions.B))
+                    ChangeMenu(ref SelectedBIndex);
             }
             else
             {
@@ -123,6 +127,62 @@ namespace GBJamGame.Scenes
                 else if (Input.Down(Actions.B))
                     DownAction(SelectedBIndex);
             }
+        }
+
+        private void MoveMenu(int dir)
+        {
+            _menuIndex += dir;
+            Audio.PlaySfx("assets/sfx/menu.wav");
+
+            if (_menuIndex < 1)
+                _menuIndex = (int)Tool.FillMode;
+
+            if (_menuIndex > (int)Tool.FillMode)
+                _menuIndex = 1;
+        }
+
+        private void ChangeMenu(ref Tool tool)
+        {
+            tool = (Tool) _menuIndex;
+
+            switch (tool)
+            {
+                case Tool.Pencil1px:
+                    Audio.PlaySfxHigh("assets/sfx/vox/1px.wav");
+                    break;
+                case Tool.Pencil2px:
+                    Audio.PlaySfxHigh("assets/sfx/vox/2px.wav");
+                    break;
+                case Tool.Pencil3px:
+                    Audio.PlaySfxHigh("assets/sfx/vox/3px.wav");
+                    break;
+                case Tool.Fill:
+                    Audio.PlaySfxHigh("assets/sfx/vox/fill.wav");
+                    break;
+                case Tool.FillMode:
+                    Audio.PlaySfxHigh("assets/sfx/vox/fillmode.wav");
+                    break;
+                case Tool.Line:
+                    Audio.PlaySfxHigh("assets/sfx/vox/line.wav");
+                    break;
+                case Tool.Rectangle:
+                    Audio.PlaySfxHigh("assets/sfx/vox/rectangle.wav");
+                    break;
+                case Tool.Undo:
+                    Audio.PlaySfxHigh("assets/sfx/vox/undo.wav");
+                    break;
+            }
+        }
+
+        private void ToggleMenu()
+        {
+            _inMenu = !_inMenu;
+
+            if (_inMenu)
+                Audio.PlaySfx("assets/sfx/open.wav");
+            else
+                Audio.PlaySfx("assets/sfx/close.wav");
+
         }
 
         public void Draw(GameTime gameTime)
@@ -194,6 +254,13 @@ namespace GBJamGame.Scenes
 
         private void Pencil(int size, ColorIndex index)
         {
+            if (_lastPaintedX == _cursorX &&
+                _lastPaintedY == _cursorY)
+                return;
+
+            _lastPaintedX = _cursorX;
+            _lastPaintedY = _cursorY;
+
             switch (size)
             {
                 case 1:
@@ -224,6 +291,8 @@ namespace GBJamGame.Scenes
                     break;
                 }
             }
+
+            Audio.PlaySfxRandomPitched("assets/sfx/fill.wav");
         }
 
         private void NextColor()

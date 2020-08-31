@@ -3,6 +3,7 @@
 
 
 
+
       CREDITS
 
       GameBoy
@@ -20,6 +21,9 @@
   Harry
     @harrikko
 
+  Vistram
+    @vistram_
+
 
      ~ AUDIO ~
 
@@ -35,6 +39,7 @@
 
   Made with
     Aseprite
+    ClipStudioPaint
     CSCore
     DefleMask
     MilkyTracker
@@ -50,13 +55,13 @@
 
 
 
+
  ##################
- #   THANK  YOU   #
- #      FOR       #
+ #                #
+ #   THANKS FOR   #
  #    PLAYING!    #
+ #                #
  ##################
-
-
 
 
 

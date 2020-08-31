@@ -36,13 +36,16 @@ namespace GBJamGame
 
             SpriteBatch = new SpriteBatch(GraphicsDevice);
             Input = new Input();
+            Audio = new Audio();
 
-            _scene = new CreditsScene(this);
+            _scene = new PaintScene(this);
         }
 
         public SpriteBatch SpriteBatch { get; }
 
         public Input Input { get; }
+
+        public Audio Audio { get; }
 
         protected override void Initialize()
         {

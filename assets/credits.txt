@@ -1,0 +1,34 @@
+GameBoy Crayon Club
+
+  Made for GBJAM8
+
+
+      ~ ART ~
+
+  Harry
+    @harrikko
+
+
+     ~ AUDIO ~
+
+  Elaine
+    @dvmbdnbslvt
+
+
+  ~ PROGRAMMING ~
+
+  Carim
+    @nitrixr
+
+
+  Made with
+    Aseprite
+    CSCore
+    DefleMask
+    MilkyTracker
+    MonoGame
+    
+
+     THANK  YOU
+        FOR
+      PLAYING!

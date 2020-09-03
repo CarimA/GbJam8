@@ -1,46 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using CSCore;
 using CSCore.Codecs;
+using CSCore.Codecs.WAV;
 using CSCore.CoreAudioAPI;
 using CSCore.SoundOut;
 using CSCore.Streams.Effects;
 using Cyotek.Collections.Generic;
+using GBJamGame.Globals;
 using Microsoft.Xna.Framework.Audio;
 
 namespace GBJamGame
 {
-    public class SoundEffect
+    public class Audio : IDisposable
     {
-        private ISoundOut _soundOut;
-        private IWaveSource _waveSource;
-    }
-
-    public class Audio
-    {
-        private readonly ObservableCollection<MMDevice> _devices;
         //private ISoundOut _soundOut;
         //private IWaveSource _waveSource;
-        private Random _random;
 
-        private CircularBuffer<SoundEffect> _soundEffects;
+        private SoundMixer _mixer;
+        private WasapiOut _soundOut;
 
         private event EventHandler<PlaybackStoppedEventArgs> PlaybackStopped;
 
+        private readonly SharedMemoryStream _menu;
+        private readonly SharedMemoryStream _fill;
+
         public Audio()
         {
-            _random = new Random();
-            _devices = new ObservableCollection<MMDevice>();
+            _mixer = new SoundMixer();
+            _soundOut = new WasapiOut();
 
-            using var mmDeviceEnumerator = new MMDeviceEnumerator();
-            using var mmDeviceCollection = mmDeviceEnumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active);
-            _devices.Add(mmDeviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console));
-            foreach (var device in mmDeviceCollection)
-                _devices.Add(device);
+            _soundOut.Initialize(_mixer.ToWaveSource());
+            _soundOut.Play();
+
+            _menu = LoadSound(AppContext.BaseDirectory + "assets/sfx/menu.wav");
+            _fill = LoadSound(AppContext.BaseDirectory + "assets/sfx/fill.wav");
         }
+
+        private static SharedMemoryStream LoadSound(string filePath)
+        {
+            return new SharedMemoryStream(File.ReadAllBytes(filePath));
+        }
+
+        private void PlaySfx(SharedMemoryStream stream)
+        {
+            var sfx = new WaveFileReader(stream.MakeShared())
+                .ChangeSampleRate(11025)
+                .ToSampleSource()
+                .ToMono();
+            _mixer.AddSound(sfx);
+        }
+
+        public void PlayMenu() => PlaySfx(_menu);
+
+
+        //public void PlayFill() => PlaySfx(_fill);
 
         /*private void CleanupPlayback()
         {
@@ -57,59 +75,311 @@ namespace GBJamGame
             }
 
         }*/
-
-        public void PlaySfxPitched(string filename, float pitch)
+        public void Dispose()
         {
-            var sample = CodecFactory.Instance.GetCodec(filename)
-                .ChangeSampleRate(11025)
-                .ToSampleSource();
+            _mixer?.Dispose();
+            _soundOut?.Dispose();
+        }
+    }
 
-            var ps = new PitchShifter(sample);
-            ps.PitchShiftFactor = pitch;
+    public class SoundMixer : ISampleSource
+    {
+        private readonly List<SoundSource> _soundSources = new List<SoundSource>();
+        private readonly object _soundSourcesLock = new object();
+        private bool _disposed;
+        private float[] _internalBuffer;
 
-            var waveSource = ps
-                .ToMono()
-                .ToWaveSource(8);
+        public SoundMixer()
+        {
+            var sampleRate = 11025;
+            var bits = 8;
+            var channels = 1;
+            var audioEncoding = AudioEncoding.IeeeFloat;
 
-
-            var soundOut = new WasapiOut { Latency = 100, Device = _devices.First() };
-            soundOut.Initialize(waveSource);
-            soundOut.Volume = 1f;
-
-            soundOut.Play();
+            WaveFormat = new WaveFormat(sampleRate, bits, channels, audioEncoding);
         }
 
-        public void PlaySfxHigh(string filename)
+        public int Read(float[] buffer, int offset, int count)
         {
-            PlaySfxPitched(filename, 2f);
+            var numberOfSamplesStoredInBuffer = 0;
+
+            Array.Clear(buffer, offset, count);
+
+            lock (_soundSourcesLock)
+            {
+                if (_disposed)
+                    return 0;
+
+                if (count > 0 && _soundSources.Count > 0)
+                {
+                    _internalBuffer = _internalBuffer.CheckBuffer(count);
+
+                    for (var i = _soundSources.Count - 1; i >= 0; i--)
+                    {
+                        var soundSource = _soundSources[i];
+                        soundSource.Read(_internalBuffer, count);
+
+                        for (int j = offset, k = 0; k < soundSource.SamplesRead; j++, k++)
+                        {
+                            buffer[j] += _internalBuffer[k];
+                        }
+
+                        if (soundSource.SamplesRead > numberOfSamplesStoredInBuffer)
+                            numberOfSamplesStoredInBuffer = soundSource.SamplesRead;
+
+                        if (soundSource.SamplesRead == 0)
+                        {
+                            _soundSources.Remove(soundSource);
+                            soundSource.Dispose();
+                        }
+                    }
+
+                    // TODO Normalize!
+                }
+            }
+
+            return count;
         }
 
-        public void PlaySfxRandomPitched(string filename)
+        public void Dispose()
         {
-            var min = 0.8f;
-            var max = 1.15f;
-            var diff = max - min;
-            var num = min + (diff * (float)_random.NextDouble());
+            lock (_soundSourcesLock)
+            {
+                _disposed = true;
 
-            PlaySfxPitched(filename, num);
+                foreach (var soundSource in _soundSources)
+                {
+                    soundSource.Dispose();
+                }
+
+                _soundSources.Clear();
+            }
         }
 
-        public void PlaySfx(string filename)
+        public bool CanSeek => !_disposed;
+        public WaveFormat WaveFormat { get; }
+
+        public long Position
         {
-            var waveSource = CodecFactory.Instance.GetCodec(filename)
-                .ChangeSampleRate(11025)
-                .ToSampleSource()
-                .ToMono()
-                .ToWaveSource(8);
+            get
+            {
+                CheckIfDisposed();
+                return 0;
+            }
+            set => throw new NotSupportedException($"{nameof(SoundMixer)} does not support seeking.");
+        }
 
-            var soundOut = new WasapiOut {Latency = 100, Device = _devices.First()};
-            soundOut.Initialize(waveSource);
-            soundOut.Volume = 1f;
+        public long Length
+        {
+            get
+            {
+                CheckIfDisposed();
+                return 0;
+            }
+        }
 
-            soundOut.Play();
+        public void AddSound(ISampleSource sound)
+        {
+            lock (_soundSourcesLock)
+            {
+                if (_disposed)
+                    return;
 
-            //if (PlaybackStopped != null)
-            //    _soundOut.Stopped += PlaybackStopped;
+                // TODO Check wave format compatibility?
+                _soundSources.Add(new SoundSource(sound));
+            }
+        }
+
+        private void CheckIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(SoundMixer));
+        }
+
+        private class SoundSource : IDisposable
+        {
+            private readonly ISampleSource _sound;
+
+            public SoundSource(ISampleSource sound)
+            {
+                _sound = sound;
+            }
+
+            public int SamplesRead { get; private set; }
+
+            public void Dispose()
+            {
+                _sound.Dispose();
+            }
+
+            public void Read(float[] buffer, int count)
+            {
+                SamplesRead = _sound.Read(buffer, 0, count);
+            }
+        }
+    }
+
+    internal sealed class SharedMemoryStream : Stream
+    {
+        private readonly object _lock;
+        private readonly RefCounter _refCounter;
+        private readonly MemoryStream _sourceMemoryStream;
+        private bool _disposed;
+        private long _position;
+
+        public SharedMemoryStream(byte[] buffer) : this(new object(), new RefCounter(), new MemoryStream(buffer))
+        {
+        }
+
+        private SharedMemoryStream(object @lock, RefCounter refCounter, MemoryStream sourceMemoryStream)
+        {
+            _lock = @lock;
+
+            lock (_lock)
+            {
+                _refCounter = refCounter;
+                _sourceMemoryStream = sourceMemoryStream;
+
+                _refCounter.Count++;
+            }
+        }
+
+        public override bool CanRead
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return !_disposed;
+                }
+            }
+        }
+
+        public override bool CanSeek
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return !_disposed;
+                }
+            }
+        }
+
+        public override bool CanWrite => false;
+
+        public override long Length
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    CheckIfDisposed();
+                    return _sourceMemoryStream.Length;
+                }
+            }
+        }
+
+        public override long Position
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    CheckIfDisposed();
+                    return _position;
+                }
+            }
+            set
+            {
+                lock (_lock)
+                {
+                    CheckIfDisposed();
+                    _position = value;
+                }
+            }
+        }
+
+        // Creates another shallow copy of stream that uses the same underlying MemoryStream
+        public SharedMemoryStream MakeShared()
+        {
+            lock (_lock)
+            {
+                CheckIfDisposed();
+                return new SharedMemoryStream(_lock, _refCounter, _sourceMemoryStream);
+            }
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            lock (_lock)
+            {
+                CheckIfDisposed();
+
+                _sourceMemoryStream.Position = Position;
+                var seek = _sourceMemoryStream.Seek(offset, origin);
+                Position = _sourceMemoryStream.Position;
+
+                return seek;
+            }
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotSupportedException($"{nameof(SharedMemoryStream)} is read only stream.");
+        }
+
+        // Uses position that is unique for each copy of shared stream
+        // to read underlying MemoryStream that is common for all shared copies
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            lock (_lock)
+            {
+                CheckIfDisposed();
+
+                _sourceMemoryStream.Position = Position;
+                var read = _sourceMemoryStream.Read(buffer, offset, count);
+                Position = _sourceMemoryStream.Position;
+
+                return read;
+            }
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotSupportedException($"{nameof(SharedMemoryStream)} is read only stream.");
+        }
+
+        // Reference counting to dispose underlying MemoryStream when all shared copies are disposed
+        protected override void Dispose(bool disposing)
+        {
+            lock (_lock)
+            {
+                if (disposing)
+                {
+                    _disposed = true;
+                    _refCounter.Count--;
+                    if (_refCounter.Count == 0)
+                        _sourceMemoryStream?.Dispose();
+                }
+
+                base.Dispose(disposing);
+            }
+        }
+
+        private void CheckIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(SharedMemoryStream));
+        }
+
+        private class RefCounter
+        {
+            public int Count;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection.Metadata;
 using GBJamGame.Enums;
 using GBJamGame.Globals;
 using GBJamGame.Scenes;
@@ -10,15 +11,21 @@ namespace GBJamGame
     public class MainGame : Game
     {
         private readonly GraphicsDeviceManager _graphics;
-        private readonly IScene _scene;
+        private IScene _scene;
         private RenderTarget2D _backbuffer;
 
-        private Effect _effect;
         private int _lastHeight;
 
         private int _lastWidth;
         private EffectPass _pass;
         private RenderTarget2D _shaderbuffer;
+
+        // 0 = black, 1 = clear
+        private float _transition = 1f;
+        private bool _transitionDirection;
+        private bool _isTransitioning;
+        private float _transitionWaitTime;
+        private IScene _transitionTarget;
 
         public MainGame()
         {
@@ -38,7 +45,6 @@ namespace GBJamGame
             Input = new Input();
             Audio = new Audio();
 
-            _scene = new PaintScene(this);
         }
 
         public SpriteBatch SpriteBatch { get; }
@@ -52,30 +58,40 @@ namespace GBJamGame
             base.Initialize();
             Window.Title = "GAMEBOY CRAYON CLUB";
 
-
             _graphics.PreferredBackBufferWidth = Constants.GbWidth * 4;
             _graphics.PreferredBackBufferHeight = Constants.GbHeight * 4;
             _graphics.ApplyChanges();
 
-            _effect = Utils.EffectFromFile(GraphicsDevice, "assets/gb.ogl");
-            var lut = Utils.Texture2DFromFile(GraphicsDevice, "assets/lut.png");
-            _effect.Parameters["LutTexture"].SetValue(lut);
-            _effect.Parameters["LutWidth"].SetValue((float) lut.Width);
-            _effect.Parameters["LutHeight"].SetValue((float) lut.Height);
-            _effect.Parameters["tone1"].SetValue(Constants.Tone1);
-            _effect.Parameters["tone2"].SetValue(Constants.Tone2);
-            _effect.Parameters["tone3"].SetValue(Constants.Tone3);
-            _effect.Parameters["tone4"].SetValue(Constants.Tone4);
-            _pass = _effect.CurrentTechnique.Passes[0];
+            Data.Load(GraphicsDevice);
+
+            Data.Shader.Parameters["LutTexture"].SetValue(Data.LUT);
+            Data.Shader.Parameters["LutWidth"].SetValue((float)Data.LUT.Width);
+            Data.Shader.Parameters["LutHeight"].SetValue((float)Data.LUT.Height);
+            Data.Shader.Parameters["tone1"].SetValue(Constants.Tone1);
+            Data.Shader.Parameters["tone2"].SetValue(Constants.Tone2);
+            Data.Shader.Parameters["tone3"].SetValue(Constants.Tone3);
+            Data.Shader.Parameters["tone4"].SetValue(Constants.Tone4);
+            _pass = Data.Shader.CurrentTechnique.Passes[0];
 
             _backbuffer = new RenderTarget2D(GraphicsDevice, Constants.GbWidth, Constants.GbHeight);
             _shaderbuffer = new RenderTarget2D(GraphicsDevice, Constants.GbWidth, Constants.GbHeight);
+
+            _scene = new StartScene(this);
+        }
+
+        protected override void OnExiting(object sender, EventArgs args)
+        {
+            base.OnExiting(sender, args);
+            Audio.Dispose();
         }
 
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            Input.Update(gameTime);
+
+            var isTransitioning = UpdateTransition(gameTime);
+            Input.Update(gameTime, isTransitioning);
+
             _scene.Update(gameTime);
 
             if (Input.Pressed(Actions.Fullscreen))
@@ -97,16 +113,21 @@ namespace GBJamGame
                 _graphics.ApplyChanges();
             }
 
-            if (Input.Pressed(Actions.Screenshot)) TakeScreenshot();
+            if (Input.Pressed(Actions.Screenshot)) TakeScreenshot(false);
+            if (Input.Pressed(Actions.ScreenshotGbRes)) TakeScreenshot(true);
         }
 
-        private void TakeScreenshot()
+        private void TakeScreenshot(bool useGbRes)
         {
-            var buffer = new RenderTarget2D(GraphicsDevice, Constants.GbWidth * 4, Constants.GbHeight * 4);
+            var factor = useGbRes
+                ? 1
+                : 4;
+
+            var buffer = new RenderTarget2D(GraphicsDevice, Constants.GbWidth * factor, Constants.GbHeight * factor);
             GraphicsDevice.SetRenderTarget(buffer);
 
             SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
-            SpriteBatch.Draw(_shaderbuffer, new Rectangle(0, 0, Constants.GbWidth * 4, Constants.GbHeight * 4),
+            SpriteBatch.Draw(_shaderbuffer, new Rectangle(0, 0, Constants.GbWidth * factor, Constants.GbHeight * factor),
                 Color.White);
             SpriteBatch.End();
 
@@ -123,15 +144,16 @@ namespace GBJamGame
             GraphicsDevice.Clear(Color.White);
 
             _scene.Draw(gameTime);
+            DrawTransition();
 
             GraphicsDevice.SetRenderTarget(_shaderbuffer);
             GraphicsDevice.Clear(Color.White);
 
             SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp);
-            _effect.Parameters["col1"].SetValue(Constants.Color1);
-            _effect.Parameters["col2"].SetValue(Constants.Color2);
-            _effect.Parameters["col3"].SetValue(Constants.Color3);
-            _effect.Parameters["col4"].SetValue(Constants.Color4);
+            Data.Shader.Parameters["col1"].SetValue(Constants.Color1 / 255f);
+            Data.Shader.Parameters["col2"].SetValue(Constants.Color2 / 255f);
+            Data.Shader.Parameters["col3"].SetValue(Constants.Color3 / 255f);
+            Data.Shader.Parameters["col4"].SetValue(Constants.Color4 / 255f);
             _pass.Apply();
             SpriteBatch.Draw(_backbuffer, Vector2.Zero, Color.White);
             SpriteBatch.End();
@@ -144,6 +166,71 @@ namespace GBJamGame
             SpriteBatch.End();
         }
 
+
+        private void DrawTransition()
+        {
+            var phase = (int)(_transition * 8f);
+            SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            for (var x = 0; x < Constants.GbWidth / 8; x++)
+            {
+                for (var y = 0; y < Constants.GbHeight / 8; y++)
+                {
+                    SpriteBatch.Draw(Data.Wipe, new Vector2(x * 8, y * 8), new Rectangle(phase * 8, 0, 8, 8), Color.White);
+                }
+            }
+            SpriteBatch.End();
+        }
+
+        public void Transition(IScene scene)
+        {
+            if (_isTransitioning)
+                return;
+
+            _isTransitioning = true;
+            _transitionTarget = scene;
+            _transitionDirection = false;
+            _transition = 1f;
+            _transitionWaitTime = 0.65f;
+        }
+
+        public bool UpdateTransition(GameTime gameTime)
+        {
+            if (_isTransitioning)
+            {
+                if (!_transitionDirection)
+                {
+                    _transition -= (gameTime.GetElapsedSeconds() * 2);
+
+                    if (_transition <= 0f)
+                    {
+                        _transitionWaitTime -= (gameTime.GetElapsedSeconds() * 2);
+
+                        if (_transitionWaitTime <= 0f)
+                        {
+                            _scene.Close();
+                            _scene = _transitionTarget;
+                            _scene.Initialise();
+
+                            _transitionDirection = true;
+                        }
+                    }
+                }
+                else
+                {
+                    _transition += (gameTime.GetElapsedSeconds() * 2);
+
+                    if (_transition >= 1f)
+                    {
+                        _isTransitioning = false;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         private Rectangle ScaledBackbuffer()
         {
             var displayWidth = Window.ClientBounds.Width;
@@ -154,8 +241,8 @@ namespace GBJamGame
             var heightScale = displayHeight / (double) Constants.GbHeight;
             var smallest = (int) Math.Min(widthScale, heightScale);
 
-            width = width * smallest;
-            height = height * smallest;
+            width *= smallest;
+            height *= smallest;
 
             var x = displayWidth / 2 - width / 2;
             var y = displayHeight / 2 - height / 2;

@@ -11,6 +11,7 @@
         Start,
         Select,
         Fullscreen,
-        Screenshot
+        Screenshot,
+        ScreenshotGbRes
     }
 }

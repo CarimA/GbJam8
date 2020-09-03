@@ -1,0 +1,168 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using GBJamGame.Enums;
+using GBJamGame.Globals;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Media;
+
+namespace GBJamGame.Scenes
+{
+    public class MenuScene : IScene
+    {
+        private readonly MainGame _game;
+        private Menu _menu;
+
+        public MenuScene(MainGame game)
+        {
+            _game = game;
+
+            _menu = new Menu();
+            _menu.AddItem(new MenuLabel("Color in!", () => { }));
+            _menu.AddItem(new MenuLabel("Blank sketch", NewSketch));
+            _menu.AddItem(new MenuLabel("Edit a sketch", () => { }));
+            _menu.AddItem(new MenuLabel("Choose colors", () => { }));
+        }
+
+        private void NewSketch()
+        {
+            _game.Transition(new PaintScene(_game, -1));
+        }
+
+        public void Initialise()
+        {
+
+        }
+
+        public void Update(GameTime gameTIme)
+        {
+            var input = _game.Input;
+
+            if (input.Pressed(Actions.B))
+            {
+                _game.Transition(new TitleScene(_game));
+            }
+
+            if (input.Pressed(Actions.DPadUp))
+            {
+                _menu.Previous();
+            }
+
+            if (input.Pressed(Actions.DPadDown))
+            {
+                _menu.Next();
+            }
+
+            if (input.Pressed(Actions.A))
+            {
+                _menu.Select();
+            }
+        }
+
+        public void Draw(GameTime gameTime)
+        {
+            var spriteBatch = _game.SpriteBatch;
+
+            var offset = ((float)gameTime.TotalGameTime.TotalSeconds % 1f) * 8;
+
+            spriteBatch.Begin(samplerState: SamplerState.PointWrap);
+            for (var x = 0; x < (Constants.GbWidth / 8) + 1; x++)
+            {
+                for (var y = 0; y < (Constants.GbHeight / 8) + 1; y++)
+                {
+                    spriteBatch.Draw(Data.UI, new Vector2((x * 8) - offset, (y * 8) - offset), new Rectangle(16, 0, 8, 8), Color.White);
+                }
+            }
+            _menu.Draw(spriteBatch);
+            spriteBatch.End();
+        }
+
+        public void Close()
+        {
+
+        }
+    }
+
+    public class Menu
+    {
+        public List<MenuLabel> _labels;
+        private int _menuIndex;
+        private int _widest;
+
+        public Menu()
+        {
+            _labels = new List<MenuLabel>();
+        }
+
+        public void AddItem(MenuLabel menuLabel)
+        {
+            if (menuLabel.Name.Length > _widest)
+                _widest = menuLabel.Name.Length;
+
+            _labels.Add(menuLabel);
+        }
+
+        public void Next()
+        {
+            _menuIndex++;
+            if (_menuIndex >= _labels.Count)
+                _menuIndex = 0;
+        }
+
+        public void Previous()
+        {
+            _menuIndex--;
+            if (_menuIndex < 0)
+                _menuIndex = _labels.Count - 1;
+        }
+
+        public void Select()
+        {
+            _labels[_menuIndex].Action();
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+
+            var height = (_labels.Count * 8) + 16;
+            var width = (_widest * 8) + 16;
+            var x = (Constants.GbWidth / 2) - (width / 2);
+            x = x - x % 8;
+            var y = (Constants.GbHeight / 2) - (height / 2);
+            y = y - y % 8;
+
+            spriteBatch.Draw(Data.UI, new Rectangle(x, y, width, height), new Rectangle(0, 0, 8, 8), Color.White);
+
+            for (var i = 0; i < _labels.Count; i++)
+            {
+                var label = _labels[i];
+
+                if (i == _menuIndex)
+                {
+                    spriteBatch.Draw(Data.UI, new Rectangle(x + 8, y + 8 + (i * 8), width - 16, 8), new Rectangle(0, 8, 8, 8), Color.White);
+                    spriteBatch.DrawString(Data.Font, label.Name, x + 8, y + 8 + (i * 8), Color.Black);
+                }
+                else
+                {
+                    spriteBatch.DrawString(Data.Font, label.Name, x + 8, y + 8 + (i * 8), Color.White);
+                }
+            }
+
+        }
+
+
+    }
+
+    public class MenuLabel
+    {
+        public readonly string Name;
+        public readonly Action Action;
+
+        public MenuLabel(string name, Action action)
+        {
+            Name = name;
+            Action = action;
+        }
+    }
+}

@@ -8,10 +8,10 @@ namespace GBJamGame.Globals
         public static int GbWidth = 160;
         public static int GbHeight = 144;
 
-        public static Vector4 Color1 = new Vector4(161f / 255f, 239f / 255f, 140f / 255f, 1f);
-        public static Vector4 Color2 = new Vector4(63f / 255f, 172f / 255f, 149f / 255f, 1f);
-        public static Vector4 Color3 = new Vector4(68f / 255f, 97f / 255f, 118f / 255f, 1f);
-        public static Vector4 Color4 = new Vector4(44f / 255f, 33f / 255f, 55f / 255f, 1f);
+        public static Vector4 Color1 = new Vector4(161f, 239f, 140f, 255f);
+        public static Vector4 Color2 = new Vector4(63f, 172f, 149f, 255f);
+        public static Vector4 Color3 = new Vector4(68f, 97f, 118f, 255f);
+        public static Vector4 Color4 = new Vector4(44f, 33f, 55f, 255f);
 
         public static float Tone1 = 255f / 255f;
         public static float Tone2 = 170f / 255f;

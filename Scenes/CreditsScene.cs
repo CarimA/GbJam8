@@ -12,9 +12,7 @@ namespace GBJamGame.Scenes
     {
         private Input Input => _game.Input;
         private readonly MainGame _game;
-        private Texture2D _font;
 
-        private List<string> _credits;
         private float _scrollTime;
         private int _yScroll;
         private int _maxScroll;
@@ -23,12 +21,15 @@ namespace GBJamGame.Scenes
         public CreditsScene(MainGame game)
         {
             _game = game;
-            _font = Utils.Texture2DFromFile(_game.GraphicsDevice, "assets/font.png");
 
-            _credits = File.ReadAllLines("assets/credits.txt").ToList();
             _yScroll = 0;
-            _maxScroll = -(8 * _credits.Count) + 144;
+            _maxScroll = -(8 * Data.Credits.Count) + 144;
             _stallTime = 4f;
+        }
+
+        public void Initialise()
+        {
+            
         }
 
         public void Update(GameTime gameTIme)
@@ -60,11 +61,16 @@ namespace GBJamGame.Scenes
             var spriteBatch = _game.SpriteBatch;
 
             spriteBatch.Begin();
-            for (var i = 0; i < _credits.Count; i++)
+            for (var i = 0; i < Data.Credits.Count; i++)
             {
-                spriteBatch.DrawString(_font, _credits[i], 0, _yScroll + (8 * i), Color.Black);
+                spriteBatch.DrawString(Data.Font, Data.Credits[i], 0, _yScroll + (8 * i), Color.Black);
             }
             spriteBatch.End();
+        }
+
+        public void Close()
+        {
+
         }
     }
 }

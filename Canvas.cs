@@ -64,6 +64,7 @@ namespace GBJamGame
         public void SetFromTexture(Texture2D texture)
         {
             var data = new Color[_width * _height];
+
             texture.GetData(data);
 
             for (var i = 0; i < data.Length; i++)

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
+using System.Linq;
 using GBJamGame.Enums;
 using GBJamGame.Globals;
 using Microsoft.Xna.Framework;
@@ -14,12 +14,9 @@ namespace GBJamGame.Scenes
         private readonly int _canvasHeight;
 
         private readonly int _canvasWidth;
-        private readonly Texture2D _font;
         private readonly MainGame _game;
 
-        private readonly Texture2D _ui;
         private bool _cursorBlinking;
-
         private float _cursorBlinkTime;
 
         private int _lastPaintedX;
@@ -36,7 +33,7 @@ namespace GBJamGame.Scenes
         private Tool SelectedAIndex;
         private Tool SelectedBIndex;
 
-        public PaintScene(MainGame game)
+        public PaintScene(MainGame game, int index)
         {
             _game = game;
 
@@ -56,10 +53,10 @@ namespace GBJamGame.Scenes
             _menuIndex = 1;
             _selectedTone = 2;
 
-            _ui = Utils.Texture2DFromFile(game.GraphicsDevice, "assets/ui.png");
-            _font = Utils.Texture2DFromFile(game.GraphicsDevice, "assets/font.png");
-            var art = Utils.Texture2DFromFile(game.GraphicsDevice, "assets/art/5.png");
-            _canvas.SetFromTexture(art);
+            if (index != -1)
+            {
+                _canvas.SetFromTexture(Data.Art[index]);
+            }
 
             _inMenu = false;
         }
@@ -67,6 +64,11 @@ namespace GBJamGame.Scenes
         private Input Input => _game.Input;
 
         private Audio Audio => _game.Audio;
+
+        public void Initialise()
+        {
+            
+        }
 
         public void Update(GameTime gameTime)
         {
@@ -132,7 +134,7 @@ namespace GBJamGame.Scenes
         private void MoveMenu(int dir)
         {
             _menuIndex += dir;
-            Audio.PlaySfx("assets/sfx/menu.wav");
+            Audio.PlayMenu();
 
             if (_menuIndex < 1)
                 _menuIndex = (int)Tool.FillMode;
@@ -145,7 +147,7 @@ namespace GBJamGame.Scenes
         {
             tool = (Tool) _menuIndex;
 
-            switch (tool)
+            /*switch (tool)
             {
                 case Tool.Pencil1px:
                     Audio.PlaySfxHigh("assets/sfx/vox/1px.wav");
@@ -171,18 +173,17 @@ namespace GBJamGame.Scenes
                 case Tool.Undo:
                     Audio.PlaySfxHigh("assets/sfx/vox/undo.wav");
                     break;
-            }
+            }*/
         }
 
         private void ToggleMenu()
         {
             _inMenu = !_inMenu;
 
-            if (_inMenu)
+            /*if (_inMenu)
                 Audio.PlaySfx("assets/sfx/open.wav");
             else
-                Audio.PlaySfx("assets/sfx/close.wav");
-
+                Audio.PlaySfx("assets/sfx/close.wav");*/
         }
 
         public void Draw(GameTime gameTime)
@@ -198,17 +199,17 @@ namespace GBJamGame.Scenes
             // draw overlay
             if (_inMenu)
             {
-                spriteBatch.Draw(_ui, new Rectangle(0, 0, 160, 144), new Rectangle(0, 0, 1, 1), Color.White * 0.65f);
+                spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 160, 144), new Rectangle(0, 0, 1, 1), Color.White * 0.65f);
             }
             else
             {
                 if (_cursorBlinking)
                 {
                     if (_canvas.GetPixel(_cursorX, _cursorY) == ColorIndex.Color4)
-                        spriteBatch.Draw(_ui, new Vector2(_cursorX + 16, _cursorY), new Rectangle(8, 8, 1, 1),
+                        spriteBatch.Draw(Data.UI, new Vector2(_cursorX + 16, _cursorY), new Rectangle(8, 8, 1, 1),
                             Color.White);
                     else
-                        spriteBatch.Draw(_ui, new Vector2(_cursorX + 16, _cursorY), new Rectangle(0, 0, 1, 1),
+                        spriteBatch.Draw(Data.UI, new Vector2(_cursorX + 16, _cursorY), new Rectangle(0, 0, 1, 1),
                             Color.White);
                 }
             }
@@ -222,16 +223,21 @@ namespace GBJamGame.Scenes
             if (_inMenu)
             {
                 if (_cursorBlinking)
-                    spriteBatch.Draw(_ui, new Rectangle(0, 16 * _menuIndex, 16, 16), new Rectangle(0, 0, 1, 1),
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 16 * _menuIndex, 16, 16), new Rectangle(0, 0, 1, 1),
                         Color.White * 0.5f);
                 else
-                    spriteBatch.Draw(_ui, new Rectangle(0, 16 * _menuIndex, 16, 16), new Rectangle(8, 8, 1, 1),
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 16 * _menuIndex, 16, 16), new Rectangle(8, 8, 1, 1),
                         Color.White * 0.85f);
 
                 DrawMenuLabels(spriteBatch);
             }
 
             spriteBatch.End();
+        }
+
+        public void Close()
+        {
+            throw new NotImplementedException();
         }
 
         private void MoveCursor(int dX, int dY)
@@ -292,7 +298,7 @@ namespace GBJamGame.Scenes
                 }
             }
 
-            Audio.PlaySfxRandomPitched("assets/sfx/fill.wav");
+            //Audio.PlayFill();
         }
 
         private void NextColor()
@@ -474,21 +480,21 @@ namespace GBJamGame.Scenes
 
         private void DrawSelectedIndexes(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_ui, new Vector2(0, 8 + 16 * (int) SelectedBIndex), new Rectangle(0, 48, 8, 8),
+            spriteBatch.Draw(Data.UI, new Vector2(0, 8 + 16 * (int) SelectedBIndex), new Rectangle(0, 48, 8, 8),
                 Color.White);
-            spriteBatch.Draw(_ui, new Vector2(8, 8 + 16 * (int) SelectedAIndex), new Rectangle(8, 48, 8, 8),
+            spriteBatch.Draw(Data.UI, new Vector2(8, 8 + 16 * (int) SelectedAIndex), new Rectangle(8, 48, 8, 8),
                 Color.White);
         }
 
         private void DrawIcons(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_ui, new Vector2(0, 16), new Rectangle(32, 0, 16, 16), Color.White);
-            spriteBatch.Draw(_ui, new Vector2(0, 32), new Rectangle(48, 16, 16, 16), Color.White);
-            spriteBatch.Draw(_ui, new Vector2(0, 48), new Rectangle(48, 32, 16, 16), Color.White);
-            spriteBatch.Draw(_ui, new Vector2(0, 64), new Rectangle(32, 16, 16, 16), Color.White);
-            spriteBatch.Draw(_ui, new Vector2(0, 80), new Rectangle(32, 32, 16, 16), Color.White);
-            spriteBatch.Draw(_ui, new Vector2(0, 96), new Rectangle(32, 48, 16, 16), Color.White);
-            spriteBatch.Draw(_ui, new Vector2(0, 112), new Rectangle(48, 0, 16, 16), Color.White);
+            spriteBatch.Draw(Data.UI, new Vector2(0, 16), new Rectangle(32, 0, 16, 16), Color.White);
+            spriteBatch.Draw(Data.UI, new Vector2(0, 32), new Rectangle(48, 16, 16, 16), Color.White);
+            spriteBatch.Draw(Data.UI, new Vector2(0, 48), new Rectangle(48, 32, 16, 16), Color.White);
+            spriteBatch.Draw(Data.UI, new Vector2(0, 64), new Rectangle(32, 16, 16, 16), Color.White);
+            spriteBatch.Draw(Data.UI, new Vector2(0, 80), new Rectangle(32, 32, 16, 16), Color.White);
+            spriteBatch.Draw(Data.UI, new Vector2(0, 96), new Rectangle(32, 48, 16, 16), Color.White);
+            spriteBatch.Draw(Data.UI, new Vector2(0, 112), new Rectangle(48, 0, 16, 16), Color.White);
         }
 
         private void DrawTones(SpriteBatch spriteBatch)
@@ -496,19 +502,19 @@ namespace GBJamGame.Scenes
             switch (_selectedTone)
             {
                 case 0:
-                    spriteBatch.Draw(_ui, new Rectangle(0, 0, 15, 16), new Rectangle(8, 8, 8, 8), Color.White);
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 15, 16), new Rectangle(8, 8, 8, 8), Color.White);
                     break;
                 case 1:
-                    spriteBatch.Draw(_ui, new Rectangle(0, 0, 15, 16), new Rectangle(0, 8, 8, 8), Color.White);
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 15, 16), new Rectangle(0, 8, 8, 8), Color.White);
                     break;
                 case 2:
-                    spriteBatch.Draw(_ui, new Rectangle(0, 0, 15, 16), new Rectangle(8, 0, 8, 8), Color.White);
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 15, 16), new Rectangle(8, 0, 8, 8), Color.White);
                     break;
                 case 3:
-                    spriteBatch.Draw(_ui, new Rectangle(0, 0, 15, 16), new Rectangle(0, 0, 8, 8), Color.White);
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 15, 16), new Rectangle(0, 0, 8, 8), Color.White);
                     break;
                 default:
-                    spriteBatch.Draw(_ui, new Rectangle(0, 0, 15, 16), new Rectangle(0, 0, 8, 8), Color.White);
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 15, 16), new Rectangle(0, 0, 8, 8), Color.White);
                     break;
             }
         }
@@ -518,13 +524,13 @@ namespace GBJamGame.Scenes
             // draw ui
             for (var i = 0; i < 9; i++)
             {
-                spriteBatch.Draw(_ui, new Vector2(0, i * 16),
+                spriteBatch.Draw(Data.UI, new Vector2(0, i * 16),
                     new Rectangle(8, 8, 8, 8), Color.White);
-                spriteBatch.Draw(_ui, new Vector2(0, 8 + i * 16),
+                spriteBatch.Draw(Data.UI, new Vector2(0, 8 + i * 16),
                     new Rectangle(8, 8, 8, 8), Color.White);
-                spriteBatch.Draw(_ui, new Vector2(8, i * 16),
+                spriteBatch.Draw(Data.UI, new Vector2(8, i * 16),
                     new Rectangle(8, 40, 8, 8), Color.White);
-                spriteBatch.Draw(_ui, new Vector2(8, 8 + i * 16),
+                spriteBatch.Draw(Data.UI, new Vector2(8, 8 + i * 16),
                     new Rectangle(8, 40, 8, 8), Color.White);
             }
         }
@@ -565,10 +571,10 @@ namespace GBJamGame.Scenes
 
         private void DrawFillMode(SpriteBatch spriteBatch, int sX, int sY)
         {
-            spriteBatch.Draw(_ui, new Rectangle(0, 128, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
-            spriteBatch.Draw(_ui, new Rectangle(8, 128, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
-            spriteBatch.Draw(_ui, new Rectangle(0, 136, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
-            spriteBatch.Draw(_ui, new Rectangle(8, 136, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
+            spriteBatch.Draw(Data.UI, new Rectangle(0, 128, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
+            spriteBatch.Draw(Data.UI, new Rectangle(8, 128, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
+            spriteBatch.Draw(Data.UI, new Rectangle(0, 136, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
+            spriteBatch.Draw(Data.UI, new Rectangle(8, 136, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
         }
 
         private void DrawMenuLabels(SpriteBatch spriteBatch)
@@ -590,9 +596,9 @@ namespace GBJamGame.Scenes
 
         private void DrawMenuLabel(SpriteBatch spriteBatch, string label, int y)
         {
-            spriteBatch.Draw(_ui, new Rectangle(16, y, label.Length * 8, 8), new Rectangle(0, 0, 8, 8),
+            spriteBatch.Draw(Data.UI, new Rectangle(16, y, label.Length * 8, 8), new Rectangle(0, 0, 8, 8),
                 Color.White);
-            spriteBatch.DrawString(_font, label, 16, y, Color.White);
+            spriteBatch.DrawString(Data.Font, label, 16, y, Color.White);
         }
     }
 }

@@ -17,6 +17,7 @@ namespace GBJamGame
         private readonly Dictionary<Actions, List<Keys>> _keyMappings;
         private readonly Dictionary<Actions, float> _pressedTime;
         private readonly Dictionary<Actions, bool> _wasPressed;
+        private bool _isTransitioning;
 
         public Input()
         {
@@ -31,7 +32,8 @@ namespace GBJamGame
                 {Actions.Start, new List<Keys> {Keys.Enter}},
                 {Actions.Select, new List<Keys> {Keys.Back}},
                 {Actions.Fullscreen, new List<Keys> {Keys.F1}},
-                {Actions.Screenshot, new List<Keys> {Keys.F2}}
+                {Actions.Screenshot, new List<Keys> {Keys.F2}},
+                {Actions.ScreenshotGbRes, new List<Keys> {Keys.F3}}
             };
 
             _buttonMappings = new Dictionary<Actions, List<Buttons>>
@@ -79,6 +81,9 @@ namespace GBJamGame
 
         public bool Pressed(Actions action)
         {
+            if (_isTransitioning)
+                return false;
+
             if (!_isPressed.ContainsKey(action) || !_wasPressed.ContainsKey(action))
                 return false;
 
@@ -87,6 +92,9 @@ namespace GBJamGame
 
         public bool Released(Actions action)
         {
+            if (_isTransitioning)
+                return false;
+
             if (!_isPressed.ContainsKey(action) || !_wasPressed.ContainsKey(action))
                 return false;
 
@@ -95,31 +103,41 @@ namespace GBJamGame
 
         public bool Down(Actions action)
         {
+            if (_isTransitioning)
+                return false;
+
             return _isPressed.ContainsKey(action) && _isPressed[action];
         }
 
         public bool Repeat(Actions action, float initial, float interval)
         {
-            if (PressedTime(action) < initial)
+            if (_isTransitioning)
                 return false;
 
-            return Down(action);
+            return !(PressedTime(action) < initial) && Down(action);
         }
 
         public bool Up(Actions action)
         {
+            if (_isTransitioning)
+                return false;
+
             return !Down(action);
         }
 
         public float PressedTime(Actions action)
         {
+            if (_isTransitioning)
+                return 0;
+
             return _pressedTime.ContainsKey(action)
                 ? _pressedTime[action]
                 : 0;
         }
 
-        public void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, bool isTransitioning)
         {
+            _isTransitioning = isTransitioning;
             var ksState = Keyboard.GetState();
             var gpState = GamePad.GetState(PlayerIndex.One);
 

@@ -16,36 +16,44 @@
 
 
 
-      ~ ART ~
+  Carim
+    @nitrixr
+  Code
+  
 
-  Harry
-    @harrikko
+  Dot
+    @todzuaru
+  Art
 
-  Vistram
-    @vistram_
-
-
-     ~ AUDIO ~
 
   Elaine
     @dvmbdnbslvt
+  BGM & SFX
 
 
-  ~ PROGRAMMING ~
+  Harry
+    @harrikko
+  Art
 
-  Carim
-    @nitrixr
+
+  Vistram
+    @vistram_
+  Art & BGM
 
 
-  Made with
-    Aseprite
-    ClipStudioPaint
-    CSCore
-    DefleMask
-    MilkyTracker
-    MonoGame
+
+
+   ~ MADE WITH ~
+  Aseprite
+  Clip Studio Paint
+  CSCore
+  DefleMask
+  MilkyTracker
+  MonoGame
    
   
+
+
   Source code at:
  https://github.com
    /CarimA/GbJam8

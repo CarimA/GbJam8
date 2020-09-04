@@ -17,6 +17,7 @@ namespace GBJamGame.Scenes
         private int _yScroll;
         private int _maxScroll;
         private float _stallTime;
+        private float _finishTime;
 
         public CreditsScene(MainGame game)
         {
@@ -25,6 +26,7 @@ namespace GBJamGame.Scenes
             _yScroll = 0;
             _maxScroll = -(8 * Data.Credits.Count) + 144;
             _stallTime = 4f;
+            _finishTime = 4f;
         }
 
         public void Initialise()
@@ -53,6 +55,20 @@ namespace GBJamGame.Scenes
                     if (_yScroll < _maxScroll)
                         _yScroll = _maxScroll;
                 }
+            }
+
+            if (_yScroll == _maxScroll)
+            {
+                _finishTime -= elapsed;
+                if (_finishTime <= 0)
+                {
+                    _game.Transition(new TitleScene(_game));
+                }
+            }
+
+            if (Input.Pressed(Actions.Start))
+            {
+                _game.Transition(new TitleScene(_game));
             }
         }
 

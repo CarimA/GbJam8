@@ -47,9 +47,50 @@
 
 
 
+   ~ PALETTES ~
+
+
+  Acid147 - Blues
+
+  Aero - Lava
+
+  Dried Apricot - 
+    Blueberry
+
+  fro - Blush
+
+  GB bro - Moon
+
+  GrafxKid - 
+    Grapefruit
+
+  Haretro - JB4
+
+  IsaGamer - Gold
+
+  Kerrie Lake -
+    Coldfire,
+    Ice Cream,
+    Nymph, Wish
+
+  Polyducks -
+    Ayy4, Cave4
+
+  P-Tux7 -
+    Fuzzyfour V2
+
+  WildLeoKnight -
+    Cherrymelon,
+    Crimson
+
+
+
    ~ MADE WITH ~
+
+
   Aseprite
-  Clip Studio Paint
+  Clip Studio
+    Paint
   CSCore
   DefleMask
   MilkyTracker

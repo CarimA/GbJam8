@@ -33,7 +33,10 @@ namespace GBJamGame.Scenes
         private Tool SelectedAIndex;
         private Tool SelectedBIndex;
 
-        public PaintScene(MainGame game, int index)
+        private Menu _startMenu;
+        private Menu _confirmMenu;
+
+        public PaintScene(MainGame game, Texture2D texture)
         {
             _game = game;
 
@@ -53,12 +56,19 @@ namespace GBJamGame.Scenes
             _menuIndex = 1;
             _selectedTone = 2;
 
-            if (index != -1)
-            {
-                _canvas.SetFromTexture(Data.Art[index]);
-            }
-
+            _canvas.SetFromTexture(texture);
+            
             _inMenu = false;
+
+            _startMenu = new Menu("Menu");
+            _startMenu.AddItem(new MenuLabel("Save Sketch", () => { }));
+            _startMenu.AddItem(new MenuLabel("Load Sketch", () => { }));
+            _startMenu.AddItem(new MenuLabel("Change Palette", () => { }));
+            _startMenu.AddItem(new MenuLabel("Return to Menu", () => { }));
+
+            _confirmMenu = new Menu("Quit without saving?");
+            _confirmMenu.AddItem(new MenuLabel("Yes", () => { }));
+            _confirmMenu.AddItem(new MenuLabel("No", () => { }));
         }
 
         private Input Input => _game.Input;

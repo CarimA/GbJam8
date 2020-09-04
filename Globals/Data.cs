@@ -53,6 +53,9 @@ namespace GBJamGame.Globals
                 if (texture.Width == 144 && texture.Height == 144)
                     Art.Add(texture);
             }
+
+            // for some reason, they get loaded in backwards
+            Art.Reverse();
         }
 
         private static Texture2D Texture2DFromFile(GraphicsDevice graphicsDevice, string path)

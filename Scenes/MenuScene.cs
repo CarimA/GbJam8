@@ -18,16 +18,32 @@ namespace GBJamGame.Scenes
         {
             _game = game;
 
-            _menu = new Menu();
-            _menu.AddItem(new MenuLabel("Color in!", () => { }));
-            _menu.AddItem(new MenuLabel("Blank sketch", NewSketch));
-            _menu.AddItem(new MenuLabel("Edit a sketch", () => { }));
-            _menu.AddItem(new MenuLabel("Choose colors", () => { }));
+            _menu = new Menu("Main Menu");
+            _menu.AddItem(new MenuLabel("Color In!", OpenGallery));
+            _menu.AddItem(new MenuLabel("Blank Sketch", NewSketch));
+            _menu.AddItem(new MenuLabel("Edit a Sketch", () => { }));
+            _menu.AddItem(new MenuLabel("Credits", OpenCredits));
+            _menu.AddItem(new MenuLabel("Change Palette", OpenPalette));
         }
 
         private void NewSketch()
         {
-            _game.Transition(new PaintScene(_game, -1));
+            _game.Transition(new PaintScene(_game, Utils.BlankTexture(_game.GraphicsDevice)));
+        }
+
+        private void OpenGallery()
+        {
+            _game.Transition(new GalleryScene(_game, this, Data.Art));
+        }
+
+        private void OpenCredits()
+        {
+            _game.Transition(new CreditsScene(_game));
+        }
+
+        private void OpenPalette()
+        {
+            _game.Transition(new PaletteScene(_game, this));
         }
 
         public void Initialise()
@@ -64,16 +80,8 @@ namespace GBJamGame.Scenes
         {
             var spriteBatch = _game.SpriteBatch;
 
-            var offset = ((float)gameTime.TotalGameTime.TotalSeconds % 1f) * 8;
-
             spriteBatch.Begin(samplerState: SamplerState.PointWrap);
-            for (var x = 0; x < (Constants.GbWidth / 8) + 1; x++)
-            {
-                for (var y = 0; y < (Constants.GbHeight / 8) + 1; y++)
-                {
-                    spriteBatch.Draw(Data.UI, new Vector2((x * 8) - offset, (y * 8) - offset), new Rectangle(16, 0, 8, 8), Color.White);
-                }
-            }
+            Utils.DrawBg(gameTime, spriteBatch);
             _menu.Draw(spriteBatch);
             spriteBatch.End();
         }
@@ -87,12 +95,15 @@ namespace GBJamGame.Scenes
     public class Menu
     {
         public List<MenuLabel> _labels;
+        private string _title;
         private int _menuIndex;
         private int _widest;
 
-        public Menu()
+        public Menu(string title)
         {
+            _title = title;
             _labels = new List<MenuLabel>();
+            _widest = _title.Length;
         }
 
         public void AddItem(MenuLabel menuLabel)
@@ -101,6 +112,13 @@ namespace GBJamGame.Scenes
                 _widest = menuLabel.Name.Length;
 
             _labels.Add(menuLabel);
+        }
+
+        public void Clear()
+        {
+            _menuIndex = 0;
+            _labels.Clear();
+            _widest = _title.Length;
         }
 
         public void Next()
@@ -125,14 +143,17 @@ namespace GBJamGame.Scenes
         public void Draw(SpriteBatch spriteBatch)
         {
 
-            var height = (_labels.Count * 8) + 16;
+            var height = (_labels.Count * 8) + 32;
             var width = (_widest * 8) + 16;
             var x = (Constants.GbWidth / 2) - (width / 2);
             x = x - x % 8;
             var y = (Constants.GbHeight / 2) - (height / 2);
             y = y - y % 8;
 
+            var titleOffset = (width / 2) - ((int)((_title.Length / 2) + 1) * 8) + 8;
+
             spriteBatch.Draw(Data.UI, new Rectangle(x, y, width, height), new Rectangle(0, 0, 8, 8), Color.White);
+            spriteBatch.DrawString(Data.Font, _title, x + titleOffset, y + 8, Color.White);
 
             for (var i = 0; i < _labels.Count; i++)
             {
@@ -140,12 +161,12 @@ namespace GBJamGame.Scenes
 
                 if (i == _menuIndex)
                 {
-                    spriteBatch.Draw(Data.UI, new Rectangle(x + 8, y + 8 + (i * 8), width - 16, 8), new Rectangle(0, 8, 8, 8), Color.White);
-                    spriteBatch.DrawString(Data.Font, label.Name, x + 8, y + 8 + (i * 8), Color.Black);
+                    spriteBatch.Draw(Data.UI, new Rectangle(x + 8, y + 24 + (i * 8), width - 16, 8), new Rectangle(0, 8, 8, 8), Color.White);
+                    spriteBatch.DrawString(Data.Font, label.Name, x + 8, y + 24 + (i * 8), Color.Black);
                 }
                 else
                 {
-                    spriteBatch.DrawString(Data.Font, label.Name, x + 8, y + 8 + (i * 8), Color.White);
+                    spriteBatch.DrawString(Data.Font, label.Name, x + 8, y + 24 + (i * 8), Color.White);
                 }
             }
 

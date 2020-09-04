@@ -37,6 +37,10 @@ namespace GBJamGame.Scenes
         public void Draw(GameTime gameTime)
         {
             _game.GraphicsDevice.Clear(Color.Black);
+
+            _game.SpriteBatch.Begin();
+            _game.SpriteBatch.DrawString(Data.Font, "Made for GBJAM8!", 16, 120, Color.White);
+            _game.SpriteBatch.End();
         }
 
         public void Close()

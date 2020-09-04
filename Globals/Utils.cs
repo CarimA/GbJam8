@@ -35,5 +35,28 @@ namespace GBJamGame.Globals
             var num = (float)random.NextDouble() * diff;
             return min + num;
         }
+
+        public static void DrawBg(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            var offset = ((float)gameTime.TotalGameTime.TotalSeconds % 1f) * 8;
+
+            for (var x = 0; x < (Constants.GbWidth / 8) + 1; x++)
+            {
+                for (var y = 0; y < (Constants.GbHeight / 8) + 1; y++)
+                {
+                    spriteBatch.Draw(Data.UI, new Vector2((x * 8) - offset, (y * 8) - offset), new Rectangle(16, 0, 8, 8), Color.White);
+                }
+            }
+        }
+
+        public static bool IsEven(this int num)
+        {
+            return num % 2 == 0;
+        }
+
+        public static Texture2D BlankTexture(GraphicsDevice graphicsDevice)
+        {
+            return new RenderTarget2D(graphicsDevice, Constants.GbWidth, Constants.GbHeight);
+        }
     }
 }

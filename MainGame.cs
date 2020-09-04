@@ -27,6 +27,11 @@ namespace GBJamGame
         private float _transitionWaitTime;
         private IScene _transitionTarget;
 
+        public Vector4 Color1;
+        public Vector4 Color2;
+        public Vector4 Color3;
+        public Vector4 Color4;
+
         public MainGame()
         {
             IsMouseVisible = false;
@@ -57,6 +62,11 @@ namespace GBJamGame
         {
             base.Initialize();
             Window.Title = "GAMEBOY CRAYON CLUB";
+
+            SetPalette(Constants.StandardColor1,
+                Constants.StandardColor2,
+                Constants.StandardColor3,
+                Constants.StandardColor4);
 
             _graphics.PreferredBackBufferWidth = Constants.GbWidth * 4;
             _graphics.PreferredBackBufferHeight = Constants.GbHeight * 4;
@@ -136,6 +146,14 @@ namespace GBJamGame
             buffer.Save($"screenshots/{Guid.NewGuid()}.png");
         }
 
+        public void SetPalette(Color color1, Color color2, Color color3, Color color4)
+        {
+            Color1 = color1.ToVector4();
+            Color2 = color2.ToVector4();
+            Color3 = color3.ToVector4();
+            Color4 = color4.ToVector4();
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             base.Draw(gameTime);
@@ -150,10 +168,10 @@ namespace GBJamGame
             GraphicsDevice.Clear(Color.White);
 
             SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp);
-            Data.Shader.Parameters["col1"].SetValue(Constants.Color1 / 255f);
-            Data.Shader.Parameters["col2"].SetValue(Constants.Color2 / 255f);
-            Data.Shader.Parameters["col3"].SetValue(Constants.Color3 / 255f);
-            Data.Shader.Parameters["col4"].SetValue(Constants.Color4 / 255f);
+            Data.Shader.Parameters["col1"].SetValue(Color1);
+            Data.Shader.Parameters["col2"].SetValue(Color2);
+            Data.Shader.Parameters["col3"].SetValue(Color3);
+            Data.Shader.Parameters["col4"].SetValue(Color4);
             _pass.Apply();
             SpriteBatch.Draw(_backbuffer, Vector2.Zero, Color.White);
             SpriteBatch.End();

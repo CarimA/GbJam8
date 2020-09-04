@@ -31,11 +31,18 @@ namespace GBJamGame
 
         public Audio()
         {
-            _mixer = new SoundMixer();
-            _soundOut = new WasapiOut();
+            try
+            {
+                _mixer = new SoundMixer();
+                _soundOut = new WasapiOut();
 
-            _soundOut.Initialize(_mixer.ToWaveSource());
-            _soundOut.Play();
+                _soundOut.Initialize(_mixer.ToWaveSource());
+                _soundOut.Play();
+            }
+            catch
+            {
+                Console.WriteLine("Could not load audio");
+            }
 
             _menu = LoadSound(AppContext.BaseDirectory + "assets/sfx/menu.wav");
             _fill = LoadSound(AppContext.BaseDirectory + "assets/sfx/fill.wav");
@@ -48,6 +55,9 @@ namespace GBJamGame
 
         private void PlaySfx(SharedMemoryStream stream)
         {
+            if (_soundOut.PlaybackState != PlaybackState.Playing)
+                return;
+
             var sfx = new WaveFileReader(stream.MakeShared())
                 .ChangeSampleRate(11025)
                 .ToSampleSource()

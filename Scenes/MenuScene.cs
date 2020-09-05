@@ -10,7 +10,7 @@ namespace GBJamGame.Scenes
     public class MenuScene : IScene
     {
         private readonly MainGame _game;
-        private Menu _menu;
+        private readonly Menu _menu;
 
         public MenuScene(MainGame game)
         {
@@ -93,7 +93,7 @@ namespace GBJamGame.Scenes
     public class Menu
     {
         public List<MenuLabel> _labels;
-        private string _title;
+        private readonly string _title;
         private int _menuIndex;
         private int _widest;
 
@@ -144,9 +144,9 @@ namespace GBJamGame.Scenes
             var height = (_labels.Count * 8) + 32;
             var width = (_widest * 8) + 16;
             var x = (Constants.GbWidth / 2) - (width / 2);
-            x = x - x % 8;
+            x -= x % 8;
             var y = (Constants.GbHeight / 2) - (height / 2);
-            y = y - y % 8;
+            y -= y % 8;
 
             var titleOffset = (width / 2) - ((int)((_title.Length / 2) + 1) * 8) + 8;
 

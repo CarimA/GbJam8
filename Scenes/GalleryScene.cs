@@ -8,15 +8,15 @@ namespace GBJamGame.Scenes
 {
     public class GalleryScene : IScene
     {
-        private MainGame _game;
+        private readonly MainGame _game;
 
         private SpriteBatch SpriteBatch => _game.SpriteBatch;
         private Input Input => _game.Input;
 
-        private List<Texture2D> _textures;
+        private readonly List<Texture2D> _textures;
         private int _index;
         private int _displayStartIndex;
-        private IScene _last;
+        private readonly IScene _last;
 
         public GalleryScene(MainGame game, IScene last, List<Texture2D> textures)
         {
@@ -107,7 +107,7 @@ namespace GBJamGame.Scenes
 
             var perc = ((_index / 2) / (((float)_textures.Count / 2) - 1));
             var scrollY = (120f * perc);
-            scrollY = scrollY - scrollY % 8;
+            scrollY -= scrollY % 8;
             SpriteBatch.Draw(Data.UI, new Rectangle(144, (int)(8 + scrollY), 8, 8), new Rectangle(8, 8, 8, 8), Color.White);
             SpriteBatch.End();
         }

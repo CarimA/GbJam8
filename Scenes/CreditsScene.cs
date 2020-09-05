@@ -11,7 +11,7 @@ namespace GBJamGame.Scenes
 
         private float _scrollTime;
         private int _yScroll;
-        private int _maxScroll;
+        private readonly int _maxScroll;
         private float _stallTime;
         private float _finishTime;
 

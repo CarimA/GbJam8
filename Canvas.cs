@@ -9,22 +9,18 @@ namespace GBJamGame
 {
     internal class Canvas
     {
-        private readonly GraphicsDevice _graphicsDevice;
         private readonly int _height;
         private readonly RenderTarget2D _result;
 
         private readonly LinkedList<ColorIndex[]> _snapshots;
-        private readonly SpriteBatch _spriteBatch;
 
         private readonly int _width;
         private bool _isDirty;
 
         private ColorIndex[] _pixels;
 
-        public Canvas(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, int width, int height)
+        public Canvas(GraphicsDevice graphicsDevice, int width, int height)
         {
-            _graphicsDevice = graphicsDevice;
-            _spriteBatch = spriteBatch;
             _width = width;
             _height = height;
             _result = new RenderTarget2D(graphicsDevice, width, height);

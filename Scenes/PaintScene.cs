@@ -32,8 +32,8 @@ namespace GBJamGame.Scenes
         private Tool SelectedAIndex;
         private Tool SelectedBIndex;
 
-        private Menu _startMenu;
-        private Menu _confirmMenu;
+        private readonly Menu _startMenu;
+        private readonly Menu _confirmMenu;
 
         public PaintScene(MainGame game, Texture2D texture)
         {
@@ -46,7 +46,6 @@ namespace GBJamGame.Scenes
 
             _canvas = new Canvas(
                 game.GraphicsDevice,
-                game.SpriteBatch,
                 _canvasWidth,
                 _canvasHeight);
 
@@ -110,19 +109,19 @@ namespace GBJamGame.Scenes
             else
             {
                 if (Input.Pressed(Actions.DPadUp)
-                    || Input.Repeat(Actions.DPadUp, 0.35f, 0.2f))
+                    || Input.Repeat(Actions.DPadUp, 0.35f))
                     MoveCursor(0, -1);
 
                 if (Input.Pressed(Actions.DPadLeft)
-                    || Input.Repeat(Actions.DPadLeft, 0.35f, 0.2f))
+                    || Input.Repeat(Actions.DPadLeft, 0.35f))
                     MoveCursor(-1, 0);
 
                 if (Input.Pressed(Actions.DPadRight)
-                    || Input.Repeat(Actions.DPadRight, 0.35f, 0.2f))
+                    || Input.Repeat(Actions.DPadRight, 0.35f))
                     MoveCursor(1, 0);
 
                 if (Input.Pressed(Actions.DPadDown)
-                    || Input.Repeat(Actions.DPadDown, 0.35f, 0.2f))
+                    || Input.Repeat(Actions.DPadDown, 0.35f))
                     MoveCursor(0, 1);
 
                 if (Input.Pressed(Actions.Start))
@@ -578,7 +577,7 @@ namespace GBJamGame.Scenes
             }
         }
 
-        private void DrawFillMode(SpriteBatch spriteBatch, int sX, int sY)
+        private static void DrawFillMode(SpriteBatch spriteBatch, int sX, int sY)
         {
             spriteBatch.Draw(Data.UI, new Rectangle(0, 128, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
             spriteBatch.Draw(Data.UI, new Rectangle(8, 128, 8, 8), new Rectangle(sX, sY, 8, 8), Color.White);
@@ -603,7 +602,7 @@ namespace GBJamGame.Scenes
             DrawMenuLabel(spriteBatch, "Bound to B", 8 + 16 * (int)SelectedBIndex);
         }
 
-        private void DrawMenuLabel(SpriteBatch spriteBatch, string label, int y)
+        private static void DrawMenuLabel(SpriteBatch spriteBatch, string label, int y)
         {
             spriteBatch.Draw(Data.UI, new Rectangle(16, y, label.Length * 8, 8), new Rectangle(0, 0, 8, 8),
                 Color.White);

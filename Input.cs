@@ -68,13 +68,13 @@ namespace GBJamGame
             }
         }
 
-        private bool IsButtonDown(GamePadState state, IEnumerable<Buttons> buttons)
+        private static bool IsButtonDown(GamePadState state, IEnumerable<Buttons> buttons)
         {
             return state.IsConnected
                    && buttons.Any(state.IsButtonDown);
         }
 
-        private bool IsKeyDown(KeyboardState state, IEnumerable<Keys> keys)
+        private static bool IsKeyDown(KeyboardState state, IEnumerable<Keys> keys)
         {
             return keys.Any(state.IsKeyDown);
         }
@@ -109,7 +109,7 @@ namespace GBJamGame
             return _isPressed.ContainsKey(action) && _isPressed[action];
         }
 
-        public bool Repeat(Actions action, float initial, float interval)
+        public bool Repeat(Actions action, float initial)
         {
             if (_isTransitioning)
                 return false;

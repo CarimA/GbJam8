@@ -10,19 +10,18 @@ namespace GBJamGame
 {
     public class Audio : IDisposable
     {
-        private Random _random;
+        private readonly Random _random;
         private ISoundOut _musicOut;
         private IWaveSource _musicSource;
 
-        private SoundMixer _mixer;
-        private WasapiOut _soundOut;
+        private readonly SoundMixer _mixer;
+        private readonly WasapiOut _soundOut;
 
         private event EventHandler<PlaybackStoppedEventArgs> PlaybackStopped;
 
         private readonly SharedMemoryStream _menu;
-        private readonly SharedMemoryStream _fill;
 
-        private List<string> _playlist;
+        private readonly List<string> _playlist;
 
         private bool _playingPlaylist;
 
@@ -42,7 +41,7 @@ namespace GBJamGame
             }
 
             _menu = LoadSound(AppContext.BaseDirectory + "assets/sfx/menu.wav");
-            _fill = LoadSound(AppContext.BaseDirectory + "assets/sfx/fill.wav");
+            LoadSound(AppContext.BaseDirectory + "assets/sfx/fill.wav");
 
             _random = new Random();
             _playlist = new List<string>();

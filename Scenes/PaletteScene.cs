@@ -9,13 +9,13 @@ namespace GBJamGame.Scenes
 {
     public class PaletteScene : IScene
     {
-        private MainGame _game;
-        private IScene _last;
+        private readonly MainGame _game;
+        private readonly IScene _last;
 
-        private Menu _menu;
+        private readonly Menu _menu;
 
-        private List<(string, Color, Color, Color, Color)> _palettes;
-        private int _displayAmount;
+        private readonly List<(string, Color, Color, Color, Color)> _palettes;
+        private readonly int _displayAmount;
         private int _page;
 
         public PaletteScene(MainGame game, IScene last)

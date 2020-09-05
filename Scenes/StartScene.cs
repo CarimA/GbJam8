@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using GBJamGame.Globals;
+﻿using GBJamGame.Globals;
 using Microsoft.Xna.Framework;
 
 namespace GBJamGame.Scenes
@@ -21,7 +18,7 @@ namespace GBJamGame.Scenes
 
         public void Initialise()
         {
-            
+
         }
 
         public void Update(GameTime gameTIme)

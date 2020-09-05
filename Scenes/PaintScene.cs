@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using GBJamGame.Enums;
+﻿using GBJamGame.Enums;
 using GBJamGame.Globals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
 
 namespace GBJamGame.Scenes
 {
@@ -57,7 +56,7 @@ namespace GBJamGame.Scenes
             _selectedTone = 2;
 
             _canvas.SetFromTexture(texture);
-            
+
             _inMenu = false;
 
             _startMenu = new Menu("Menu");
@@ -77,7 +76,7 @@ namespace GBJamGame.Scenes
 
         public void Initialise()
         {
-            _game.Audio.StartPlaylist();   
+            _game.Audio.StartPlaylist();
         }
 
         public void Update(GameTime gameTime)
@@ -155,7 +154,7 @@ namespace GBJamGame.Scenes
 
         private void ChangeMenu(ref Tool tool)
         {
-            tool = (Tool) _menuIndex;
+            tool = (Tool)_menuIndex;
 
             /*switch (tool)
             {
@@ -280,32 +279,32 @@ namespace GBJamGame.Scenes
             switch (size)
             {
                 case 1:
-                {
-                    _canvas.SetPixel(_cursorX, _cursorY, index);
-                    break;
-                }
+                    {
+                        _canvas.SetPixel(_cursorX, _cursorY, index);
+                        break;
+                    }
                 case 2:
-                {
-                    _canvas.SetPixel(_cursorX, _cursorY, index);
-                    _canvas.SetPixel(_cursorX - 1, _cursorY, index);
-                    _canvas.SetPixel(_cursorX + 1, _cursorY, index);
-                    _canvas.SetPixel(_cursorX, _cursorY - 1, index);
-                    _canvas.SetPixel(_cursorX, _cursorY + 1, index);
-                    break;
-                }
+                    {
+                        _canvas.SetPixel(_cursorX, _cursorY, index);
+                        _canvas.SetPixel(_cursorX - 1, _cursorY, index);
+                        _canvas.SetPixel(_cursorX + 1, _cursorY, index);
+                        _canvas.SetPixel(_cursorX, _cursorY - 1, index);
+                        _canvas.SetPixel(_cursorX, _cursorY + 1, index);
+                        break;
+                    }
                 case 3:
-                {
-                    _canvas.SetPixel(_cursorX, _cursorY, index);
-                    _canvas.SetPixel(_cursorX - 1, _cursorY, index);
-                    _canvas.SetPixel(_cursorX + 1, _cursorY, index);
-                    _canvas.SetPixel(_cursorX, _cursorY - 1, index);
-                    _canvas.SetPixel(_cursorX, _cursorY + 1, index);
-                    _canvas.SetPixel(_cursorX - 1, _cursorY - 1, index);
-                    _canvas.SetPixel(_cursorX + 1, _cursorY - 1, index);
-                    _canvas.SetPixel(_cursorX - 1, _cursorY + 1, index);
-                    _canvas.SetPixel(_cursorX + 1, _cursorY + 1, index);
-                    break;
-                }
+                    {
+                        _canvas.SetPixel(_cursorX, _cursorY, index);
+                        _canvas.SetPixel(_cursorX - 1, _cursorY, index);
+                        _canvas.SetPixel(_cursorX + 1, _cursorY, index);
+                        _canvas.SetPixel(_cursorX, _cursorY - 1, index);
+                        _canvas.SetPixel(_cursorX, _cursorY + 1, index);
+                        _canvas.SetPixel(_cursorX - 1, _cursorY - 1, index);
+                        _canvas.SetPixel(_cursorX + 1, _cursorY - 1, index);
+                        _canvas.SetPixel(_cursorX - 1, _cursorY + 1, index);
+                        _canvas.SetPixel(_cursorX + 1, _cursorY + 1, index);
+                        break;
+                    }
             }
 
             //Audio.PlayFill();
@@ -332,20 +331,20 @@ namespace GBJamGame.Scenes
             switch (tool)
             {
                 case Tool.Pencil1px:
-                {
-                    Pencil(1, index);
-                    break;
-                }
+                    {
+                        Pencil(1, index);
+                        break;
+                    }
                 case Tool.Pencil2px:
-                {
-                    Pencil(2, index);
-                    break;
-                }
+                    {
+                        Pencil(2, index);
+                        break;
+                    }
                 case Tool.Pencil3px:
-                {
-                    Pencil(3, index);
-                    break;
-                }
+                    {
+                        Pencil(3, index);
+                        break;
+                    }
             }
         }
 
@@ -364,41 +363,41 @@ namespace GBJamGame.Scenes
             switch (tool)
             {
                 case Tool.FillMode:
-                {
-                    _fillMode++;
-                    if (_fillMode >= 8)
-                        _fillMode = 0;
-                    break;
-                }
+                    {
+                        _fillMode++;
+                        if (_fillMode >= 8)
+                            _fillMode = 0;
+                        break;
+                    }
                 case Tool.Pencil1px:
-                {
-                    _canvas.Snapshot();
-                    Pencil(1, index);
-                    break;
-                }
+                    {
+                        _canvas.Snapshot();
+                        Pencil(1, index);
+                        break;
+                    }
                 case Tool.Pencil2px:
-                {
-                    _canvas.Snapshot();
-                    Pencil(2, index);
-                    break;
-                }
+                    {
+                        _canvas.Snapshot();
+                        Pencil(2, index);
+                        break;
+                    }
                 case Tool.Pencil3px:
-                {
-                    _canvas.Snapshot();
-                    Pencil(3, index);
-                    break;
-                }
+                    {
+                        _canvas.Snapshot();
+                        Pencil(3, index);
+                        break;
+                    }
                 case Tool.Fill:
-                {
-                    _canvas.Snapshot();
-                    Fill(index);
-                    break;
-                }
+                    {
+                        _canvas.Snapshot();
+                        Fill(index);
+                        break;
+                    }
                 case Tool.Undo:
-                {
-                    _canvas.Undo();
-                    break;
-                }
+                    {
+                        _canvas.Undo();
+                        break;
+                    }
             }
         }
 
@@ -425,57 +424,57 @@ namespace GBJamGame.Scenes
                     switch (_fillMode)
                     {
                         case 1:
-                        {
-                            if (Math.Abs(_cursorX - x) % 4 == 0 && Math.Abs(_cursorY - y) % 4 == 0)
-                                _canvas.SetPixel(x, y, col);
+                            {
+                                if (Math.Abs(_cursorX - x) % 4 == 0 && Math.Abs(_cursorY - y) % 4 == 0)
+                                    _canvas.SetPixel(x, y, col);
 
-                            break;
-                        }
+                                break;
+                            }
                         case 2:
-                        {
-                            if (Math.Abs(_cursorX - x) % 4 == 0 && Math.Abs(_cursorY - y) % 4 == 2
-                                || Math.Abs(_cursorX - x - 2) % 4 == 0 && Math.Abs(_cursorY - y - 2) % 4 == 2)
-                                _canvas.SetPixel(x, y, col);
+                            {
+                                if (Math.Abs(_cursorX - x) % 4 == 0 && Math.Abs(_cursorY - y) % 4 == 2
+                                    || Math.Abs(_cursorX - x - 2) % 4 == 0 && Math.Abs(_cursorY - y - 2) % 4 == 2)
+                                    _canvas.SetPixel(x, y, col);
 
-                            break;
-                        }
+                                break;
+                            }
                         case 3:
-                        {
-                            if (Math.Abs(_cursorX - x) % 2 == 0 && Math.Abs(_cursorY - y) % 2 == 0)
-                                _canvas.SetPixel(x, y, col);
+                            {
+                                if (Math.Abs(_cursorX - x) % 2 == 0 && Math.Abs(_cursorY - y) % 2 == 0)
+                                    _canvas.SetPixel(x, y, col);
 
-                            break;
-                        }
+                                break;
+                            }
                         case 4:
-                        {
-                            if (Math.Abs(_cursorX - x) % 2 == 0 && Math.Abs(_cursorY - y) % 2 == 1
-                                || Math.Abs(_cursorX - x - 1) % 2 == 0 && Math.Abs(_cursorY - y - 1) % 2 == 1)
-                                _canvas.SetPixel(x, y, col);
+                            {
+                                if (Math.Abs(_cursorX - x) % 2 == 0 && Math.Abs(_cursorY - y) % 2 == 1
+                                    || Math.Abs(_cursorX - x - 1) % 2 == 0 && Math.Abs(_cursorY - y - 1) % 2 == 1)
+                                    _canvas.SetPixel(x, y, col);
 
-                            break;
-                        }
+                                break;
+                            }
                         case 5:
-                        {
-                            if (!(Math.Abs(_cursorX - x) % 2 == 0 && Math.Abs(_cursorY - y) % 2 == 0))
-                                _canvas.SetPixel(x, y, col);
+                            {
+                                if (!(Math.Abs(_cursorX - x) % 2 == 0 && Math.Abs(_cursorY - y) % 2 == 0))
+                                    _canvas.SetPixel(x, y, col);
 
-                            break;
-                        }
+                                break;
+                            }
                         case 6:
-                        {
-                            if (!(Math.Abs(_cursorX - x) % 4 == 0 && Math.Abs(_cursorY - y) % 4 == 2
-                                  || Math.Abs(_cursorX - x - 2) % 4 == 0 && Math.Abs(_cursorY - y - 2) % 4 == 2))
-                                _canvas.SetPixel(x, y, col);
+                            {
+                                if (!(Math.Abs(_cursorX - x) % 4 == 0 && Math.Abs(_cursorY - y) % 4 == 2
+                                      || Math.Abs(_cursorX - x - 2) % 4 == 0 && Math.Abs(_cursorY - y - 2) % 4 == 2))
+                                    _canvas.SetPixel(x, y, col);
 
-                            break;
-                        }
+                                break;
+                            }
                         case 7:
-                        {
-                            if (!(Math.Abs(_cursorX - x) % 4 == 0 && Math.Abs(_cursorY - y) % 4 == 0))
-                                _canvas.SetPixel(x, y, col);
+                            {
+                                if (!(Math.Abs(_cursorX - x) % 4 == 0 && Math.Abs(_cursorY - y) % 4 == 0))
+                                    _canvas.SetPixel(x, y, col);
 
-                            break;
-                        }
+                                break;
+                            }
                     }
 
                     handled.Add((x, y));
@@ -490,9 +489,9 @@ namespace GBJamGame.Scenes
 
         private void DrawSelectedIndexes(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(Data.UI, new Vector2(0, 8 + 16 * (int) SelectedBIndex), new Rectangle(0, 48, 8, 8),
+            spriteBatch.Draw(Data.UI, new Vector2(0, 8 + 16 * (int)SelectedBIndex), new Rectangle(0, 48, 8, 8),
                 Color.White);
-            spriteBatch.Draw(Data.UI, new Vector2(8, 8 + 16 * (int) SelectedAIndex), new Rectangle(8, 48, 8, 8),
+            spriteBatch.Draw(Data.UI, new Vector2(8, 8 + 16 * (int)SelectedAIndex), new Rectangle(8, 48, 8, 8),
                 Color.White);
         }
 
@@ -600,8 +599,8 @@ namespace GBJamGame.Scenes
             DrawMenuLabel(spriteBatch, "Fill Mode", 128);
 
             DrawMenuLabel(spriteBatch, "Bound to START", 8);
-            DrawMenuLabel(spriteBatch, "Bound to A", 8 + 16 * (int) SelectedAIndex);
-            DrawMenuLabel(spriteBatch, "Bound to B", 8 + 16 * (int) SelectedBIndex);
+            DrawMenuLabel(spriteBatch, "Bound to A", 8 + 16 * (int)SelectedAIndex);
+            DrawMenuLabel(spriteBatch, "Bound to B", 8 + 16 * (int)SelectedBIndex);
         }
 
         private void DrawMenuLabel(SpriteBatch spriteBatch, string label, int y)

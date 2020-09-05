@@ -25,7 +25,7 @@ namespace GBJamGame.Globals
 
         public static float GetElapsedSeconds(this GameTime gameTime)
         {
-            return (float) gameTime.ElapsedGameTime.TotalSeconds;
+            return (float)gameTime.ElapsedGameTime.TotalSeconds;
         }
     }
 }

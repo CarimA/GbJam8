@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using GBJamGame.Enums;
+﻿using GBJamGame.Enums;
 using GBJamGame.Globals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GBJamGame.Scenes
 {
@@ -203,14 +202,14 @@ namespace GBJamGame.Scenes
                 }));
             }
 
-                _menu.AddItem(new MenuLabel("Next", () =>
-                {
-                    _page++;
-                    if (_page > (_palettes.Count / _displayAmount) - 1)
-                        _page = 0;
-                    UpdateMenu();
-                }));
-          
+            _menu.AddItem(new MenuLabel("Next", () =>
+            {
+                _page++;
+                if (_page > (_palettes.Count / _displayAmount) - 1)
+                    _page = 0;
+                UpdateMenu();
+            }));
+
         }
 
         public void Update(GameTime gameTIme)

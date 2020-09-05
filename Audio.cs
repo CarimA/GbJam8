@@ -1,20 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using CSCore;
+﻿using CSCore;
 using CSCore.Codecs;
-using CSCore.Codecs.AAC;
 using CSCore.Codecs.WAV;
-using CSCore.CoreAudioAPI;
 using CSCore.SoundOut;
-using CSCore.Streams.Effects;
-using Cyotek.Collections.Generic;
-using GBJamGame.Globals;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Media;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace GBJamGame
 {

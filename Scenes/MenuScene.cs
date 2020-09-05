@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using GBJamGame.Enums;
+﻿using GBJamGame.Enums;
 using GBJamGame.Globals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Media;
+using System;
+using System.Collections.Generic;
 
 namespace GBJamGame.Scenes
 {

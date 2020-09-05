@@ -1,10 +1,9 @@
-﻿using System;
-using System.Reflection.Metadata;
-using GBJamGame.Enums;
+﻿using GBJamGame.Enums;
 using GBJamGame.Globals;
 using GBJamGame.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace GBJamGame
 {
@@ -125,8 +124,10 @@ namespace GBJamGame
                 _graphics.ApplyChanges();
             }
 
-            if (Input.Pressed(Actions.Screenshot)) TakeScreenshot(false);
-            if (Input.Pressed(Actions.ScreenshotGbRes)) TakeScreenshot(true);
+            if (Input.Pressed(Actions.Screenshot))
+                TakeScreenshot(false);
+            if (Input.Pressed(Actions.ScreenshotGbRes))
+                TakeScreenshot(true);
         }
 
         private void TakeScreenshot(bool useGbRes)
@@ -263,9 +264,9 @@ namespace GBJamGame
             var displayHeight = Window.ClientBounds.Height;
             var width = Constants.GbWidth;
             var height = Constants.GbHeight;
-            var widthScale = displayWidth / (double) Constants.GbWidth;
-            var heightScale = displayHeight / (double) Constants.GbHeight;
-            var smallest = (int) Math.Min(widthScale, heightScale);
+            var widthScale = displayWidth / (double)Constants.GbWidth;
+            var heightScale = displayHeight / (double)Constants.GbHeight;
+            var smallest = (int)Math.Min(widthScale, heightScale);
 
             width *= smallest;
             height *= smallest;

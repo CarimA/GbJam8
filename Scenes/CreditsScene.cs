@@ -1,10 +1,6 @@
-﻿using GBJamGame.Globals;
+﻿using GBJamGame.Enums;
+using GBJamGame.Globals;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using GBJamGame.Enums;
 
 namespace GBJamGame.Scenes
 {
@@ -31,7 +27,7 @@ namespace GBJamGame.Scenes
 
         public void Initialise()
         {
-            
+
         }
 
         public void Update(GameTime gameTIme)

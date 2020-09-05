@@ -19,7 +19,7 @@ namespace GBJamGame.Scenes
 
         public void Initialise()
         {
-            
+            _game.Audio.PlayBgm("title");
         }
 
         public void Update(GameTime gameTIme)
@@ -62,7 +62,7 @@ namespace GBJamGame.Scenes
 
         public void Close()
         {
-
+            _game.Audio.StopBgm();
         }
     }
 }

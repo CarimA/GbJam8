@@ -31,6 +31,7 @@ namespace GBJamGame
         public Vector4 Color2;
         public Vector4 Color3;
         public Vector4 Color4;
+        private bool _sceneClosed;
 
         public MainGame()
         {
@@ -100,6 +101,7 @@ namespace GBJamGame
             base.Update(gameTime);
 
             var isTransitioning = UpdateTransition(gameTime);
+            Audio.Update();
             Input.Update(gameTime, isTransitioning);
 
             _scene.Update(gameTime);
@@ -209,6 +211,7 @@ namespace GBJamGame
             _transitionDirection = false;
             _transition = 1f;
             _transitionWaitTime = 0.65f;
+            _sceneClosed = false;
         }
 
         public bool UpdateTransition(GameTime gameTime)
@@ -217,6 +220,12 @@ namespace GBJamGame
             {
                 if (!_transitionDirection)
                 {
+                    if (!_sceneClosed)
+                    {
+                        _scene.Close();
+                        _sceneClosed = true;
+                    }
+
                     _transition -= (gameTime.GetElapsedSeconds() * 2);
 
                     if (_transition <= 0f)
@@ -225,9 +234,7 @@ namespace GBJamGame
 
                         if (_transitionWaitTime <= 0f)
                         {
-                            _scene.Close();
                             _scene = _transitionTarget;
-                            _scene.Initialise();
 
                             _transitionDirection = true;
                         }
@@ -239,6 +246,7 @@ namespace GBJamGame
 
                     if (_transition >= 1f)
                     {
+                        _scene.Initialise();
                         _isTransitioning = false;
                     }
                 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using CSCore;
 using CSCore.Codecs;
+using CSCore.Codecs.AAC;
 using CSCore.Codecs.WAV;
 using CSCore.CoreAudioAPI;
 using CSCore.SoundOut;
@@ -13,13 +14,15 @@ using CSCore.Streams.Effects;
 using Cyotek.Collections.Generic;
 using GBJamGame.Globals;
 using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
 
 namespace GBJamGame
 {
     public class Audio : IDisposable
     {
-        //private ISoundOut _soundOut;
-        //private IWaveSource _waveSource;
+        private Random _random;
+        private ISoundOut _musicOut;
+        private IWaveSource _musicSource;
 
         private SoundMixer _mixer;
         private WasapiOut _soundOut;
@@ -28,6 +31,10 @@ namespace GBJamGame
 
         private readonly SharedMemoryStream _menu;
         private readonly SharedMemoryStream _fill;
+
+        private List<string> _playlist;
+
+        private bool _playingPlaylist;
 
         public Audio()
         {
@@ -46,11 +53,79 @@ namespace GBJamGame
 
             _menu = LoadSound(AppContext.BaseDirectory + "assets/sfx/menu.wav");
             _fill = LoadSound(AppContext.BaseDirectory + "assets/sfx/fill.wav");
+
+            _random = new Random();
+            _playlist = new List<string>();
+            _playingPlaylist = false;
+            var files = Directory.EnumerateFiles(AppContext.BaseDirectory + "/assets/bgm/playlist");
+            foreach (var file in files)
+            {
+                if (!file.EndsWith(".wav"))
+                    continue;
+                _playlist.Add(file);
+            }
         }
 
         private static SharedMemoryStream LoadSound(string filePath)
         {
             return new SharedMemoryStream(File.ReadAllBytes(filePath));
+        }
+
+        public void PlayBgm(string song, bool resolvedName = false)
+        {
+            CleanupPlayback();
+
+            var filename = resolvedName
+                ? song
+                : $"{AppContext.BaseDirectory}/assets/bgm/{song}.wav";
+
+            _musicSource =
+                CodecFactory.Instance.GetCodec(filename)
+                    .ChangeSampleRate(11025)
+                    .ToSampleSource()
+                    .ToMono()
+                    .ToWaveSource();
+            _musicOut = new WasapiOut { Latency = 100 };
+            _musicOut.Initialize(_musicSource);
+
+            if (PlaybackStopped != null)
+                _musicOut.Stopped += PlaybackStopped;
+
+            _musicOut?.Play();
+        }
+
+        public void Update()
+        {
+            if (_musicOut != null)
+            {
+                if (_playingPlaylist && _musicOut.PlaybackState == PlaybackState.Stopped)
+                {
+                    PlayRandom();
+                }
+            }
+        }
+
+        public void StopBgm()
+        {
+            _musicOut?.Stop();
+        }
+
+        public void StartPlaylist()
+        {
+            PlayRandom();
+            _playingPlaylist = true;
+        }
+
+        public void StopPlaylist()
+        {
+            StopBgm();
+            _playingPlaylist = false;
+        }
+
+        private void PlayRandom()
+        {
+            var index = _random.Next(_playlist.Count);
+            PlayBgm(_playlist[index], true);
         }
 
         private void PlaySfx(SharedMemoryStream stream)
@@ -70,23 +145,26 @@ namespace GBJamGame
 
         //public void PlayFill() => PlaySfx(_fill);
 
-        /*private void CleanupPlayback()
+        private void CleanupPlayback()
         {
-            if (_soundOut != null)
+            StopBgm();
+
+            if (_musicOut != null)
             {
-                _soundOut.Dispose();
-                _soundOut = null;
+                _musicOut.Dispose();
+                _musicOut = null;
             }
 
-            if (_waveSource != null)
+            if (_musicSource != null)
             {
-                _waveSource.Dispose();
-                _waveSource = null;
+                _musicSource.Dispose();
+                _musicSource = null;
             }
+        }
 
-        }*/
         public void Dispose()
         {
+            CleanupPlayback();
             _mixer?.Dispose();
             _soundOut?.Dispose();
         }

@@ -48,7 +48,7 @@ namespace GBJamGame.Scenes
 
         public void Initialise()
         {
-
+            _game.Audio.PlayBgm("menu");
         }
 
         public void Update(GameTime gameTIme)

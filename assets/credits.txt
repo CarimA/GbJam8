@@ -47,7 +47,8 @@
 
 
 
-   ~ PALETTES ~
+  Using Palettes
+  from Lospec:
 
 
   Acid147 - Blues
@@ -82,6 +83,11 @@
   WildLeoKnight -
     Cherrymelon,
     Crimson
+
+
+  Using songs by
+  Eric Skiff
+
 
 
 

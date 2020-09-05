@@ -56,7 +56,7 @@ namespace GBJamGame.Globals
 
         public static Texture2D BlankTexture(GraphicsDevice graphicsDevice)
         {
-            return new RenderTarget2D(graphicsDevice, Constants.GbWidth, Constants.GbHeight);
+            return new RenderTarget2D(graphicsDevice, 144, 144);
         }
     }
 }

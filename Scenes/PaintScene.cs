@@ -77,7 +77,7 @@ namespace GBJamGame.Scenes
 
         public void Initialise()
         {
-            
+            _game.Audio.StartPlaylist();   
         }
 
         public void Update(GameTime gameTime)

@@ -25,7 +25,20 @@ namespace GBJamGame.Scenes
         private int _cursorY;
         private int _fillMode;
 
-        private bool _inMenu;
+        private bool _drawingRectangle;
+        private bool _drawingLine;
+        private int _rectStartX;
+        private int _rectStartY;
+
+        public enum MenuState
+        {
+            Game,
+            Tools,
+            Options,
+            Quit
+        }
+
+        private MenuState _inMenu;
         private int _menuIndex;
         private int _selectedTone;
 
@@ -34,6 +47,9 @@ namespace GBJamGame.Scenes
 
         private readonly Menu _startMenu;
         private readonly Menu _confirmMenu;
+
+        // redesign: turn tools into classes inheriting from ITool, having a name/icon, implementing down/pressed/up and misc things
+        // then just putting it in a list of tools and rendering that on the menu!
 
         public PaintScene(MainGame game, Texture2D texture)
         {
@@ -56,17 +72,67 @@ namespace GBJamGame.Scenes
 
             _canvas.SetFromTexture(texture);
 
-            _inMenu = false;
+            _inMenu = MenuState.Game;
 
             _startMenu = new Menu("Menu");
-            _startMenu.AddItem(new MenuLabel("Save Sketch", () => { }));
-            _startMenu.AddItem(new MenuLabel("Load Sketch", () => { }));
-            _startMenu.AddItem(new MenuLabel("Change Palette", () => { }));
-            _startMenu.AddItem(new MenuLabel("Return to Menu", () => { }));
 
-            _confirmMenu = new Menu("Quit without saving?");
-            _confirmMenu.AddItem(new MenuLabel("Yes", () => { }));
-            _confirmMenu.AddItem(new MenuLabel("No", () => { }));
+            _startMenu.AddItem(new MenuLabel("Save Sketch", () =>
+            {
+                Data.ReloadSavedArt(_game.GraphicsDevice);
+                _game.Transition(new GalleryScene(_game, this, Data.SavedArt, (textures, index) =>
+                {
+                    Data.SaveArt(index, _canvas.GetScreenTexture());
+                    _game.Transition(this);
+                }));
+            }));
+
+            _startMenu.AddItem(new MenuLabel("Load Sketch", () =>
+            {
+                Data.ReloadSavedArt(_game.GraphicsDevice);
+                _game.Transition(new GalleryScene(_game, this, Data.SavedArt, (textures, index) =>
+                {
+                    _game.Transition(new PaintScene(_game, textures[index]));
+                }));
+            }));
+
+            _startMenu.AddItem(new MenuLabel("Change Palette", () =>
+            {
+                _game.Transition(new PaletteScene(_game, this));
+            }));
+
+            _startMenu.AddItem(new MenuLabel("Return to Tools", () =>
+            {
+                _inMenu = MenuState.Tools;
+            }));
+
+            _startMenu.AddItem(new MenuLabel("Quit", () =>
+            {
+                _inMenu = MenuState.Quit;
+            }));
+
+
+
+            _confirmMenu = new Menu("Quit?");
+
+            _confirmMenu.AddItem(new MenuLabel("Quit & Save", () =>
+            {
+                Data.ReloadSavedArt(_game.GraphicsDevice);
+                _game.Transition(new GalleryScene(_game, this, Data.SavedArt, (textures, index) =>
+                {
+                    Data.SaveArt(index, _canvas.GetScreenTexture());
+                    _game.Transition(new MenuScene(_game));
+                }));
+            }));
+
+            _confirmMenu.AddItem(new MenuLabel("Quit", () =>
+            {
+                _game.Transition(new MenuScene(_game));
+            }));
+
+            _confirmMenu.AddItem(new MenuLabel("Cancel", () =>
+            {
+                _inMenu = MenuState.Options;
+            }));
         }
 
         private Input Input => _game.Input;
@@ -92,50 +158,207 @@ namespace GBJamGame.Scenes
                 ToggleMenu();
             }
 
-            if (_inMenu)
+            switch (_inMenu)
             {
-                if (Input.Pressed(Actions.DPadUp))
-                    MoveMenu(-1);
+                case MenuState.Game:
+                    if (Input.Pressed(Actions.DPadUp)
+                        || Input.Repeat(Actions.DPadUp, 0.35f))
+                        MoveCursor(0, -1);
 
-                if (Input.Pressed(Actions.DPadDown))
-                    MoveMenu(1);
+                    if (Input.Pressed(Actions.DPadLeft)
+                        || Input.Repeat(Actions.DPadLeft, 0.35f))
+                        MoveCursor(-1, 0);
 
-                if (Input.Pressed(Actions.A))
-                    ChangeMenu(ref SelectedAIndex);
+                    if (Input.Pressed(Actions.DPadRight)
+                        || Input.Repeat(Actions.DPadRight, 0.35f))
+                        MoveCursor(1, 0);
 
-                if (Input.Pressed(Actions.B))
-                    ChangeMenu(ref SelectedBIndex);
+                    if (Input.Pressed(Actions.DPadDown)
+                        || Input.Repeat(Actions.DPadDown, 0.35f))
+                        MoveCursor(0, 1);
+
+                    if (Input.Pressed(Actions.Start))
+                        NextColor();
+
+                    if (Input.Pressed(Actions.A))
+                        PressAction(SelectedAIndex);
+                    else if (Input.Down(Actions.A))
+                        DownAction(SelectedAIndex);
+                    else if (Input.Up(Actions.A))
+                        UpAction(SelectedAIndex);
+
+                    if (Input.Pressed(Actions.B))
+                        PressAction(SelectedBIndex);
+                    else if (Input.Down(Actions.B))
+                        DownAction(SelectedBIndex);
+                    else if (Input.Up(Actions.B))
+                        UpAction(SelectedBIndex);
+
+                    break;
+                case MenuState.Tools:
+                    if (Input.Pressed(Actions.DPadUp))
+                        MoveMenu(-1);
+
+                    if (Input.Pressed(Actions.DPadDown))
+                        MoveMenu(1);
+
+                    if (Input.Pressed(Actions.A))
+                        ChangeMenu(ref SelectedAIndex);
+
+                    if (Input.Pressed(Actions.B))
+                        ChangeMenu(ref SelectedBIndex);
+
+                    if (Input.Pressed(Actions.Start))
+                        _inMenu = MenuState.Options;
+
+                    break;
+                case MenuState.Options:
+                    if (Input.Pressed(Actions.B))
+                    {
+                        _inMenu = MenuState.Tools;
+                    }
+
+                    if (Input.Pressed(Actions.DPadUp))
+                    {
+                        _startMenu.Previous();
+                    }
+
+                    if (Input.Pressed(Actions.DPadDown))
+                    {
+                        _startMenu.Next();
+                    }
+
+                    if (Input.Pressed(Actions.A))
+                    {
+                        _startMenu.Select();
+                    }
+
+                    break;
+                case MenuState.Quit:
+                    if (Input.Pressed(Actions.B))
+                    {
+                        _inMenu = MenuState.Options;
+                    }
+
+                    if (Input.Pressed(Actions.DPadUp))
+                    {
+                        _confirmMenu.Previous();
+                    }
+
+                    if (Input.Pressed(Actions.DPadDown))
+                    {
+                        _confirmMenu.Next();
+                    }
+
+                    if (Input.Pressed(Actions.A))
+                    {
+                        _confirmMenu.Select();
+                    }
+
+                    break;
             }
-            else
+        }
+
+        private void UpAction(Tool tool)
+        {
+            var index = _selectedTone switch
             {
-                if (Input.Pressed(Actions.DPadUp)
-                    || Input.Repeat(Actions.DPadUp, 0.35f))
-                    MoveCursor(0, -1);
+                0 => ColorIndex.Color1,
+                1 => ColorIndex.Color2,
+                2 => ColorIndex.Color3,
+                3 => ColorIndex.Color4,
+                _ => ColorIndex.Color1
+            };
 
-                if (Input.Pressed(Actions.DPadLeft)
-                    || Input.Repeat(Actions.DPadLeft, 0.35f))
-                    MoveCursor(-1, 0);
+            switch (tool)
+            {
+                case Tool.Rectangle:
+                {
+                    if (!_drawingRectangle)
+                        return;
 
-                if (Input.Pressed(Actions.DPadRight)
-                    || Input.Repeat(Actions.DPadRight, 0.35f))
-                    MoveCursor(1, 0);
+                    _drawingRectangle = false;
+                    _canvas.Snapshot();
 
-                if (Input.Pressed(Actions.DPadDown)
-                    || Input.Repeat(Actions.DPadDown, 0.35f))
-                    MoveCursor(0, 1);
+                    var xx = Math.Min(_cursorX, _rectStartX);
+                    var yy = Math.Min(_cursorY, _rectStartY);
+                    var width = Math.Max(_cursorX, _rectStartX) - xx;
+                    var height = Math.Max(_cursorY, _rectStartY) - yy;
 
-                if (Input.Pressed(Actions.Start))
-                    NextColor();
+                    for (var i = xx; i < xx + width + 1; i++)
+                    {
+                        _canvas.SetPixel(i, yy, index);
+                        _canvas.SetPixel(i, yy + height, index);
+                    }
 
-                if (Input.Pressed(Actions.A))
-                    PressAction(SelectedAIndex);
-                else if (Input.Down(Actions.A))
-                    DownAction(SelectedAIndex);
+                    for (var i = yy; i < yy + height; i++)
+                    {
+                        _canvas.SetPixel(xx, i, index);
+                        _canvas.SetPixel(xx + width, i, index);
+                    }
 
-                if (Input.Pressed(Actions.B))
-                    PressAction(SelectedBIndex);
-                else if (Input.Down(Actions.B))
-                    DownAction(SelectedBIndex);
+                    break;
+                }
+
+                case Tool.Line:
+                    if (!_drawingLine)
+                        return;
+
+                    _drawingLine = false;
+                    _canvas.Snapshot();
+
+                    var x = _rectStartX;
+                    var y = _rectStartY;
+                    var x2 = _cursorX;
+                    var y2 = _cursorY;
+
+                    int w = x2 - x;
+                    int h = y2 - y;
+                    int dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0;
+                    if (w < 0)
+                        dx1 = -1;
+                    else if (w > 0)
+                        dx1 = 1;
+                    if (h < 0)
+                        dy1 = -1;
+                    else if (h > 0)
+                        dy1 = 1;
+                    if (w < 0)
+                        dx2 = -1;
+                    else if (w > 0)
+                        dx2 = 1;
+                    int longest = Math.Abs(w);
+                    int shortest = Math.Abs(h);
+                    if (!(longest > shortest))
+                    {
+                        longest = Math.Abs(h);
+                        shortest = Math.Abs(w);
+                        if (h < 0)
+                            dy2 = -1;
+                        else if (h > 0)
+                            dy2 = 1;
+                        dx2 = 0;
+                    }
+
+                    int numerator = longest >> 1;
+                    for (int i = 0; i <= longest; i++)
+                    {
+                        _canvas.SetPixel(x, y, index);
+                        numerator += shortest;
+                        if (!(numerator < longest))
+                        {
+                            numerator -= longest;
+                            x += dx1;
+                            y += dy1;
+                        }
+                        else
+                        {
+                            x += dx2;
+                            y += dy2;
+                        }
+
+                    }
+                    break;
             }
         }
 
@@ -186,7 +409,10 @@ namespace GBJamGame.Scenes
 
         private void ToggleMenu()
         {
-            _inMenu = !_inMenu;
+            if (_inMenu != MenuState.Game)
+                _inMenu = MenuState.Game;
+            else
+                _inMenu = MenuState.Tools;
 
             /*if (_inMenu)
                 Audio.PlaySfx("assets/sfx/open.wav");
@@ -203,23 +429,27 @@ namespace GBJamGame.Scenes
 
             spriteBatch.Draw(_canvas.GetScreenTexture(), new Vector2(16, 0), Color.White);
 
+            DrawRectangle(spriteBatch, gameTime);
+            DrawLine(spriteBatch, gameTime);
 
-            // draw overlay
-            if (_inMenu)
+            switch (_inMenu)
             {
-                spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 160, 144), new Rectangle(0, 0, 1, 1), Color.White * 0.65f);
-            }
-            else
-            {
-                if (_cursorBlinking)
-                {
-                    if (_canvas.GetPixel(_cursorX, _cursorY) == ColorIndex.Color4)
-                        spriteBatch.Draw(Data.UI, new Vector2(_cursorX + 16, _cursorY), new Rectangle(8, 8, 1, 1),
-                            Color.White);
-                    else
-                        spriteBatch.Draw(Data.UI, new Vector2(_cursorX + 16, _cursorY), new Rectangle(0, 0, 1, 1),
-                            Color.White);
-                }
+                case MenuState.Game:
+                    if (_cursorBlinking)
+                    {
+                        if (_canvas.GetPixel(_cursorX, _cursorY) == ColorIndex.Color4)
+                            spriteBatch.Draw(Data.UI, new Vector2(_cursorX + 16, _cursorY), new Rectangle(8, 8, 1, 1),
+                                Color.White);
+                        else
+                            spriteBatch.Draw(Data.UI, new Vector2(_cursorX + 16, _cursorY), new Rectangle(0, 0, 1, 1),
+                                Color.White);
+                    }
+
+                    break;
+                case MenuState.Tools:
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 160, 144), new Rectangle(0, 0, 1, 1), Color.White * 0.65f);
+
+                    break;
             }
 
             DrawBorder(spriteBatch);
@@ -228,24 +458,207 @@ namespace GBJamGame.Scenes
             DrawIcons(spriteBatch);
             DrawSelectedIndexes(spriteBatch);
 
-            if (_inMenu)
+            switch (_inMenu)
             {
-                if (_cursorBlinking)
-                    spriteBatch.Draw(Data.UI, new Rectangle(0, 16 * _menuIndex, 16, 16), new Rectangle(0, 0, 1, 1),
-                        Color.White * 0.5f);
-                else
-                    spriteBatch.Draw(Data.UI, new Rectangle(0, 16 * _menuIndex, 16, 16), new Rectangle(8, 8, 1, 1),
-                        Color.White * 0.85f);
+                case MenuState.Tools:
+                {
+                    if (_cursorBlinking)
+                        spriteBatch.Draw(Data.UI, new Rectangle(0, 16 * _menuIndex, 16, 16), new Rectangle(0, 0, 1, 1),
+                            Color.White * 0.5f);
+                    else
+                        spriteBatch.Draw(Data.UI, new Rectangle(0, 16 * _menuIndex, 16, 16), new Rectangle(8, 8, 1, 1),
+                            Color.White * 0.85f);
 
-                DrawMenuLabels(spriteBatch);
+                    DrawMenuLabels(spriteBatch);
+                    break;
+                }
+                case MenuState.Options:
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 160, 144), new Rectangle(0, 0, 1, 1), Color.White * 0.65f);
+
+                    _startMenu.Draw(spriteBatch);
+                    break;
+                case MenuState.Quit:
+                    spriteBatch.Draw(Data.UI, new Rectangle(0, 0, 160, 144), new Rectangle(0, 0, 1, 1), Color.White * 0.65f);
+
+                    _confirmMenu.Draw(spriteBatch);
+                    break;
             }
 
             spriteBatch.End();
         }
 
+        private void DrawRectangle(SpriteBatch spriteBatch, GameTime gameTime)
+        {
+            if (_drawingRectangle)
+            {
+                var x = Math.Min(_cursorX, _rectStartX);
+                var y = Math.Min(_cursorY, _rectStartY);
+                var width = Math.Max(_cursorX, _rectStartX) - x;
+                var height = Math.Max(_cursorY, _rectStartY) - y;
+
+                var anim = (int)((gameTime.TotalGameTime.TotalSeconds * 5) % 3);
+                switch (anim)
+                {
+                    case 0:
+                        DrawNinePatch(spriteBatch, Data.UI, new Rectangle(16, 8, 8, 8),
+                            new Rectangle(16 + x, y, width, height), 2);
+                        break;
+                    case 1:
+                        DrawNinePatch(spriteBatch, Data.UI, new Rectangle(24, 8, 8, 8),
+                            new Rectangle(16 + x, y, width, height), 2);
+                        break;
+                    case 2:
+                        DrawNinePatch(spriteBatch, Data.UI, new Rectangle(16, 16, 8, 8),
+                            new Rectangle(16 + x, y, width, height), 2);
+                        break;
+
+                }
+                
+
+            }
+        }
+
+        private void DrawLine(SpriteBatch spriteBatch, GameTime gameTime)
+        {
+            if (!_drawingLine)
+                return;
+
+            var anim = (int)((gameTime.TotalGameTime.TotalSeconds * 5) % 4);
+            var x = _rectStartX;
+            var y = _rectStartY;
+            var x2 = _cursorX;
+            var y2 = _cursorY;
+
+            int w = x2 - x;
+            int h = y2 - y;
+            int dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0;
+            if (w < 0)
+                dx1 = -1;
+            else if (w > 0)
+                dx1 = 1;
+            if (h < 0)
+                dy1 = -1;
+            else if (h > 0)
+                dy1 = 1;
+            if (w < 0)
+                dx2 = -1;
+            else if (w > 0)
+                dx2 = 1;
+            int longest = Math.Abs(w);
+            int shortest = Math.Abs(h);
+            if (!(longest > shortest))
+            {
+                longest = Math.Abs(h);
+                shortest = Math.Abs(w);
+                if (h < 0)
+                    dy2 = -1;
+                else if (h > 0)
+                    dy2 = 1;
+                dx2 = 0;
+            }
+
+            int numerator = longest >> 1;
+            for (int i = 0; i <= longest; i++)
+            {
+                switch ((anim + i) % 4)
+                {
+                    case 0:
+                    case 1:
+                        spriteBatch.Draw(Data.UI, new Vector2(16 + x, y), new Rectangle(0, 0, 1, 1), Color.White);
+                        break;
+                    case 2:
+                    case 3:
+                        spriteBatch.Draw(Data.UI, new Vector2(16 + x, y), new Rectangle(8, 8, 1, 1), Color.White);
+                        break;
+
+                }
+                numerator += shortest;
+                if (!(numerator < longest))
+                {
+                    numerator -= longest;
+                    x += dx1;
+                    y += dy1;
+                }
+                else
+                {
+                    x += dx2;
+                    y += dy2;
+                }
+            }
+        }
+
+        private void DrawNinePatch(SpriteBatch spriteBatch, Texture2D texture, Rectangle source, Rectangle dest,
+            int cornerSizes)
+        {
+            var dWidth = dest.Width - (cornerSizes * 2);
+            var dHeight = dest.Height - (cornerSizes * 2);
+            var sWidth = source.Width - (cornerSizes * 2);
+            var sHeight = source.Height - (cornerSizes * 2);
+
+            if (dWidth > 0)
+            {
+                for (var x = dest.X + cornerSizes; x < dest.Right - cornerSizes; x += sWidth)
+                {
+                    if (x > dest.Right - cornerSizes)
+                        sWidth = (x - (x - dest.Right - cornerSizes));
+
+                    // top
+                    spriteBatch.Draw(texture, new Rectangle(x, dest.Y, sWidth, cornerSizes),
+                        new Rectangle(source.X + cornerSizes, source.Y, sWidth, cornerSizes), Color.White);
+                    // bottom
+                    spriteBatch.Draw(texture,
+                        new Rectangle(x, dest.Y + dest.Height - cornerSizes + 1, sWidth, cornerSizes),
+                        new Rectangle(source.X + cornerSizes, source.Bottom - cornerSizes, sWidth, cornerSizes),
+                        Color.White);
+                }
+            }
+
+            if (dHeight > 0)
+            {
+                for (var y = dest.Y + cornerSizes; y < dest.Bottom - cornerSizes; y += sHeight)
+                {
+                    if (y > dest.Bottom - cornerSizes)
+                        sWidth = (y - (y - dest.Bottom - cornerSizes));
+
+                    // left
+                    spriteBatch.Draw(texture, new Rectangle(dest.X, y, cornerSizes, sHeight),
+                        new Rectangle(source.X, source.Y + cornerSizes, cornerSizes, sHeight), Color.White);
+                    // right
+                    spriteBatch.Draw(texture,
+                        new Rectangle(dest.X + dest.Width - cornerSizes + 1, y, cornerSizes, sHeight),
+                        new Rectangle(source.Right - cornerSizes, source.Y + cornerSizes, cornerSizes, sHeight),
+                        Color.White);
+                }
+            }
+
+            if (!(dest.Width > cornerSizes * 2 && dest.Height > cornerSizes * 2))
+                cornerSizes = 1;
+
+            // top left
+            spriteBatch.Draw(texture, new Rectangle(dest.X, dest.Y, cornerSizes, cornerSizes),
+                new Rectangle(source.X, source.Y, cornerSizes, cornerSizes), Color.White);
+            // top right
+            spriteBatch.Draw(texture,
+                new Rectangle(dest.X + dest.Width - cornerSizes + 1, dest.Y, cornerSizes, cornerSizes),
+                new Rectangle(source.X + source.Width - cornerSizes, source.Y, cornerSizes, cornerSizes),
+                Color.White);
+            // bottom left
+            spriteBatch.Draw(texture,
+                new Rectangle(dest.X, dest.Y + dest.Height - cornerSizes + 1, cornerSizes, cornerSizes),
+                new Rectangle(source.X, source.Y + dest.Height - cornerSizes, cornerSizes, cornerSizes),
+                Color.White);
+            // bottom right
+            spriteBatch.Draw(texture,
+                new Rectangle(dest.X + dest.Width - cornerSizes + 1, dest.Y + dest.Height - cornerSizes + 1, cornerSizes,
+                    cornerSizes),
+                new Rectangle(source.X + source.Width - cornerSizes, source.Y + dest.Height - cornerSizes,
+                    cornerSizes, cornerSizes), Color.White);
+
+        }
+
         public void Close()
         {
-            throw new NotImplementedException();
+
         }
 
         private void MoveCursor(int dX, int dY)
@@ -397,6 +810,20 @@ namespace GBJamGame.Scenes
                         _canvas.Undo();
                         break;
                     }
+                case Tool.Rectangle:
+                {
+                    _drawingRectangle = true;
+                    _rectStartX = _cursorX;
+                    _rectStartY = _cursorY;
+                    break;
+                }
+                case Tool.Line:
+                {
+                    _drawingLine = true;
+                    _rectStartX = _cursorX;
+                    _rectStartY = _cursorY;
+                    break;
+                }
             }
         }
 

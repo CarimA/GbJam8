@@ -5,6 +5,7 @@ using CSCore.SoundOut;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CSCore.Codecs.OGG;
 
 namespace GBJamGame
 {
@@ -29,6 +30,9 @@ namespace GBJamGame
         {
             try
             {
+                CodecFactory.Instance.Register("ogg-vorbis",
+                    new CodecFactoryEntry(s => new OggSource(s).ToWaveSource(), ".ogg"));
+
                 _mixer = new SoundMixer();
                 _soundOut = new WasapiOut();
 
@@ -49,7 +53,7 @@ namespace GBJamGame
             var files = Directory.EnumerateFiles(AppContext.BaseDirectory + "/assets/bgm/playlist");
             foreach (var file in files)
             {
-                if (!file.EndsWith(".wav"))
+                if (!file.EndsWith(".ogg"))
                     continue;
                 _playlist.Add(file);
             }
@@ -66,7 +70,7 @@ namespace GBJamGame
 
             var filename = resolvedName
                 ? song
-                : $"{AppContext.BaseDirectory}/assets/bgm/{song}.wav";
+                : $"{AppContext.BaseDirectory}/assets/bgm/{song}.ogg";
 
             _musicSource =
                 CodecFactory.Instance.GetCodec(filename)

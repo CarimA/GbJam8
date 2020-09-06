@@ -146,7 +146,7 @@ namespace GBJamGame
 
             GraphicsDevice.SetRenderTarget(null);
 
-            buffer.Save($"screenshots/{Guid.NewGuid()}.png");
+            buffer.Save($"{Data.SaveDir}screenshots/{Guid.NewGuid()}.png");
         }
 
         public void SetPalette(Color color1, Color color2, Color color3, Color color4)

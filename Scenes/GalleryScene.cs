@@ -1,4 +1,5 @@
-﻿using GBJamGame.Enums;
+﻿using System;
+using GBJamGame.Enums;
 using GBJamGame.Globals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,13 +19,16 @@ namespace GBJamGame.Scenes
         private int _displayStartIndex;
         private readonly IScene _last;
 
-        public GalleryScene(MainGame game, IScene last, List<Texture2D> textures)
+        private Action<List<Texture2D>, int> _onSelect;
+
+        public GalleryScene(MainGame game, IScene last, List<Texture2D> textures, Action<List<Texture2D>, int> onSelect)
         {
             _game = game;
             _textures = textures;
             _index = 0;
             _last = last;
             _displayStartIndex = 0;
+            _onSelect = onSelect;
         }
 
         public void Initialise()
@@ -61,7 +65,7 @@ namespace GBJamGame.Scenes
 
             if (Input.Pressed(Actions.A))
             {
-                _game.Transition(new PaintScene(_game, _textures[_index]));
+                _onSelect(_textures, _index);
             }
         }
 

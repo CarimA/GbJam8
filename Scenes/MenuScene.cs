@@ -19,7 +19,7 @@ namespace GBJamGame.Scenes
             _menu = new Menu("Main Menu");
             _menu.AddItem(new MenuLabel("Color In!", OpenGallery));
             _menu.AddItem(new MenuLabel("Blank Sketch", NewSketch));
-            _menu.AddItem(new MenuLabel("Edit a Sketch", () => { }));
+            _menu.AddItem(new MenuLabel("Edit a Sketch", OpenSaved));
             _menu.AddItem(new MenuLabel("Credits", OpenCredits));
             _menu.AddItem(new MenuLabel("Change Palette", OpenPalette));
         }
@@ -31,7 +31,19 @@ namespace GBJamGame.Scenes
 
         private void OpenGallery()
         {
-            _game.Transition(new GalleryScene(_game, this, Data.Art));
+            _game.Transition(new GalleryScene(_game, this, Data.Art, (textures, index) =>
+            {
+                _game.Transition(new PaintScene(_game, textures[index]));
+            }));
+        }
+
+        private void OpenSaved()
+        {
+            Data.ReloadSavedArt(_game.GraphicsDevice);
+            _game.Transition(new GalleryScene(_game, this, Data.SavedArt, (textures, index) =>
+            {
+                _game.Transition(new PaintScene(_game, textures[index]));
+            }));
         }
 
         private void OpenCredits()

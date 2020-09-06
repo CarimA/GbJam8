@@ -10,6 +10,8 @@ namespace GBJamGame.Globals
     {
         public static List<Texture2D> Art;
 
+        public static List<Texture2D> SavedArt;
+
         public static List<string> Credits;
 
         public static Texture2D Font;
@@ -24,9 +26,20 @@ namespace GBJamGame.Globals
 
         public static Texture2D Wipe;
 
+        public static string SaveDir;
+        private static string _artDir;
+
         public static void Load(GraphicsDevice graphicsDevice)
         {
+            SaveDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "gbcrayonclub\\");
+            _artDir = SaveDir + "savedart/";
+
+            Directory.CreateDirectory(SaveDir);
+            Directory.CreateDirectory(SaveDir + "screenshots/");
+            Directory.CreateDirectory(_artDir);
+
             LoadArt(graphicsDevice, AppContext.BaseDirectory + "assets/art/");
+            ReloadSavedArt(graphicsDevice);
 
             Font = Texture2DFromFile(graphicsDevice, AppContext.BaseDirectory + "assets/font.png");
             LUT = Texture2DFromFile(graphicsDevice, AppContext.BaseDirectory + "assets/lut.png");
@@ -36,6 +49,32 @@ namespace GBJamGame.Globals
 
             Credits = File.ReadAllLines(AppContext.BaseDirectory + "assets/credits.txt").ToList();
             Shader = EffectFromFile(graphicsDevice, AppContext.BaseDirectory + "assets/gb.ogl");
+        }
+
+        public static void ReloadSavedArt(GraphicsDevice graphicsDevice)
+        {
+            var saves = 32;
+            SavedArt = new List<Texture2D>();
+
+            var blankTexture = Utils.BlankTexture(graphicsDevice);
+
+            for (var i = 0; i < saves; i++)
+            {
+                var filename = _artDir + $"{i}.png";
+
+                if (!File.Exists(filename))
+                {
+                    SaveArt(i, blankTexture);
+                }
+
+                var texture = Texture2DFromFile(graphicsDevice, filename);
+                SavedArt.Add(texture);
+            }
+        }
+
+        public static void SaveArt(int index, Texture2D texture)
+        {
+            texture.Save($"{_artDir}{index}.png");
         }
 
         private static void LoadArt(GraphicsDevice graphicsDevice, string dir)
